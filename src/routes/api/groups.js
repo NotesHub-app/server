@@ -1,5 +1,5 @@
-import { requireAuth } from '../../middlewares/auth';
 import { check } from 'express-validator/check';
+import { requireAuth } from '../../middlewares/auth';
 import { checkValidation } from '../../middlewares/validation';
 import Group from '../../models/Group';
 
@@ -11,7 +11,7 @@ export default router => {
         const userId = req.user._id;
         const userGroups = req.user.groups;
 
-        //Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
+        // Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
         const groups = await Group.find({ _id: { $in: userGroups } });
 
         res.status(200).json({ groups: groups.map(group => group.toIndexJSON(userId)) });
@@ -25,7 +25,7 @@ export default router => {
         [
             requireAuth,
 
-            //Валидация параметров
+            // Валидация параметров
             check('title')
                 .isString()
                 .isLength({ min: 1 }),

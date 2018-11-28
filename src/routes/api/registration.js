@@ -1,7 +1,7 @@
-import User from '../../models/User';
 import { check, validationResult } from 'express-validator/check';
-import { randomString } from '../../utils/string';
 import dayjs from 'dayjs';
+import User from '../../models/User';
+import { randomString } from '../../utils/string';
 import { checkValidation } from '../../middlewares/validation';
 import { notFoundResponse } from '../../utils/response';
 
@@ -12,7 +12,7 @@ export default router => {
     router.post(
         '/registration',
         [
-            //Валидация полей
+            // Валидация полей
             check('email').isEmail(),
             check('password').isLength({ min: 8 }),
             checkValidation(),
@@ -32,11 +32,11 @@ export default router => {
             await user.save();
 
             if (process.env.NODE_ENV === 'production') {
-                //TODO отправить емейл с кодом на емейл пользователя
+                // TODO отправить емейл с кодом на емейл пользователя
             }
 
             return res.json({ success: true });
-        }
+        },
     );
 
     /**
@@ -45,7 +45,7 @@ export default router => {
     router.post(
         '/registration/confirm',
         [
-            //Валидация полей
+            // Валидация полей
             check('email').isString(),
             check('code').isString(),
         ],
@@ -57,7 +57,7 @@ export default router => {
             }
 
             const { email, code } = req.body;
-            const user = await User.findOne({ email: email, 'registration.code': code });
+            const user = await User.findOne({ email, 'registration.code': code });
 
             if (!user) {
                 return notFoundResponse(res, 'Not exist email or code');
@@ -67,6 +67,6 @@ export default router => {
             await user.save();
 
             return res.json({ success: true });
-        }
+        },
     );
 };

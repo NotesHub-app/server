@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 export default app => {
-    //Инициализируем API роуты
+    // Инициализируем API роуты
     const apiRoutes = express.Router();
 
     for (const file of fs.readdirSync(path.join(__dirname, 'api'))) {
@@ -15,14 +15,14 @@ export default app => {
     app.use('/api', apiRoutes);
 
     // 404 handler
-    app.use(function(req, res, next) {
+    app.use((req, res, next) => {
         const err = new Error('Not Found');
         err.status = 404;
         next(err);
     });
 
     // catch ERROR handler
-    app.use(function(err, req, res, next) {
+    app.use((err, req, res, next) => {
         if (process.env.NODE_ENV !== 'production') {
             console.warn(err.stack);
         }

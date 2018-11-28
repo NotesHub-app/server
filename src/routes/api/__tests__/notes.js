@@ -1,5 +1,5 @@
-import app from '../../../app';
 import request from 'supertest';
+import app from '../../../app';
 import Note from '../../../models/Note';
 import User from '../../../models/User';
 import Group from '../../../models/Group';
@@ -8,15 +8,13 @@ import { resetDB } from '../../../utils/db';
 let author;
 let group;
 
-const generateNote = (suffix = '') => {
-    return {
-        title: `note${suffix}`,
-        icon: `icon${suffix}`,
-        iconColor: `#FFFFFF`,
-        content: `content${suffix}`,
-        history: [],
-    };
-};
+const generateNote = (suffix = '') => ({
+    title: `note${suffix}`,
+    icon: `icon${suffix}`,
+    iconColor: `#FFFFFF`,
+    content: `content${suffix}`,
+    history: [],
+});
 
 describe('notes', () => {
     beforeAll(async () => {
@@ -29,22 +27,22 @@ describe('notes', () => {
     });
 
     test('[GET /api/notes] получения списка заметок', async () => {
-        //Создаем владельцев
+        // Создаем владельцев
 
         const anotherGroup = await new Group({ title: 'fooGroup', users: [] }).save();
 
         const anotherUser = await new User({ email: 'another@email.com', groups: [] }).save();
 
-        //Создаем заметку принадлежащих пользователю
+        // Создаем заметку принадлежащих пользователю
         await new Note({ ...generateNote(), owner: author.id }).save();
 
-        //Создаем заметку НЕ принадлежащую пользователю
+        // Создаем заметку НЕ принадлежащую пользователю
         await new Note({ ...generateNote(), owner: anotherUser._id }).save();
 
-        //Создаем заметку принадлежащую группе в котороый состоит пользователь
+        // Создаем заметку принадлежащую группе в котороый состоит пользователь
         await new Note({ ...generateNote(), group: group._id }).save();
 
-        //Создаем заметку НЕ принадлежащую группе в котороый состоит пользователь
+        // Создаем заметку НЕ принадлежащую группе в котороый состоит пользователь
         await new Note({ ...generateNote(), group: anotherGroup._id }).save();
 
         const response = await request(app)
@@ -53,7 +51,7 @@ describe('notes', () => {
 
         expect(response.statusCode).toBe(200);
 
-        //1 заметка пользователя + 1 заметка группы в котороый состоит пользователь
+        // 1 заметка пользователя + 1 заметка группы в котороый состоит пользователь
         expect(response.body.notes.length).toBe(2);
     });
 

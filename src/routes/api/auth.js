@@ -6,7 +6,7 @@ export default router => {
         if (!req.user) {
             return notFoundResponse('Unknown user');
         }
-        res.status(200).json(req.user.toAuthJSON());
+        return res.status(200).json(req.user.toAuthJSON());
     }
 
     /**

@@ -1,4 +1,4 @@
-//Middleware для авторизации
+// Middleware для авторизации
 import passport from 'passport/lib';
 
 export const requireAuth = passport.authenticate('jwt', { session: false });

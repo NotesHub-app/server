@@ -22,12 +22,12 @@ const mongoSchema = new mongoose.Schema(
         },
         groups: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Group' }],
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 mongoSchema.plugin(uniqueValidator, { message: 'is already taken.' });
 
-//При сохранении хешировать пароль
+// При сохранении хешировать пароль
 mongoSchema.pre('save', async function() {
     const user = this;
     const SALT_FACTOR = 10;
@@ -51,7 +51,7 @@ class UserClass {
                 id: this._id,
             },
             secret,
-            { expiresIn: 60 * 60 }
+            { expiresIn: 60 * 60 },
         );
     }
 

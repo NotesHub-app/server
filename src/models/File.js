@@ -10,7 +10,7 @@ const mongoSchema = new mongoose.Schema(
             type: String,
         },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 const File = mongoose.model('File', mongoSchema);

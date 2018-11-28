@@ -21,7 +21,7 @@ const mongoSchema = new mongoose.Schema(
             required: true,
         },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 const InviteCode = mongoose.model('InviteCode', mongoSchema);

@@ -1,9 +1,9 @@
-import File from '../models/File';
-import Group from '../models/Group';
-import InviteCode from '../models/InviteCode';
-import Note from '../models/Note';
-import RestorePasswordCode from '../models/RestorePasswordCode';
-import User from '../models/User';
+import File from './File';
+import Group from './Group';
+import InviteCode from './InviteCode';
+import Note from './Note';
+import RestorePasswordCode from './RestorePasswordCode';
+import User from './User';
 
 export default {
     File,

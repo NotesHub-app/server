@@ -16,7 +16,7 @@ const mongoSchema = new mongoose.Schema(
             required: true,
         },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 const RestorePasswordCode = mongoose.model('RestorePasswordCode', mongoSchema);

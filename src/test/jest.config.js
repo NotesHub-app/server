@@ -1,9 +1,9 @@
-//const { defaults } = require('jest-config');
+// const { defaults } = require('jest-config');
 const path = require('path');
 
 module.exports = {
     rootDir: process.cwd(),
-    //forceExit: true,
+    // forceExit: true,
 
     globalSetup: path.join(__dirname, 'setup.js'),
     globalTeardown: path.join(__dirname, 'teardown.js'),

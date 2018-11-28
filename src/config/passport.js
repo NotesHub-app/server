@@ -12,21 +12,21 @@ passport.use(
             passwordField: 'password',
         },
         async (email, password, done) => {
-            const user = await User.findOne({ email: email });
+            const user = await User.findOne({ email });
 
-            //Пользователь с таким емейлом и паролем должен быть в базе
+            // Пользователь с таким емейлом и паролем должен быть в базе
             if (!user || !(await user.comparePassword(password))) {
                 return done(null, false, { errors: { 'email or password': 'is invalid' } });
             }
 
-            //Регистрация должна быть верифицированной
+            // Регистрация должна быть верифицированной
             if (!user.registration.verified) {
                 return done(null, false, { errors: { registration: 'registration is not verified' } });
             }
 
             return done(null, user);
-        }
-    )
+        },
+    ),
 );
 
 // Настройка проверки JWT токена
@@ -41,12 +41,11 @@ passport.use(
                 const user = await User.findById(payload.id);
                 if (user) {
                     return done(null, user);
-                } else {
-                    return done(null, false);
                 }
+                return done(null, false);
             } catch (err) {
                 return done(err, false);
             }
-        }
-    )
+        },
+    ),
 );

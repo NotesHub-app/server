@@ -27,22 +27,22 @@ const mongoSchema = new mongoose.Schema(
 mongoSchema.pre('save', async function() {
     const group = this;
 
-    //Если поменялись пользователи у группы
+    // Если поменялись пользователи у группы
     if (group.isModified('users')) {
-        let userIds = [];
+        const userIds = [];
         for (const groupUser of group.users) {
             const userId = groupUser.user;
             userIds.push(userId);
         }
 
-        //Добавляем группу для всех пользователей массива userIds
+        // Добавляем группу для всех пользователей массива userIds
         await User.findOneAndUpdate({ _id: { $in: userIds } }, { $addToSet: { groups: group._id } });
 
-        //Убираем группу у остальных
+        // Убираем группу у остальных
         await User.findOneAndUpdate(
-            //Там где группа указана, хотя пользователя там быть не должно
+            // Там где группа указана, хотя пользователя там быть не должно
             { $and: [{ groups: group._id }, { _id: { $nin: userIds } }] },
-            //Убираем ID группы из массива групп
+            // Убираем ID группы из массива групп
             { $pull: { groups: group._id } },
         );
     }

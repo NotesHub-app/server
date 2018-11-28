@@ -1,8 +1,8 @@
+import { check, param } from 'express-validator/check';
+import * as _ from 'lodash';
 import { requireAuth } from '../../middlewares/auth';
 import Note from '../../models/Note';
-import { check, param } from 'express-validator/check';
 import { checkValidation } from '../../middlewares/validation';
-import * as _ from 'lodash';
 import { notFoundResponse } from '../../utils/response';
 
 export default router => {
@@ -13,7 +13,7 @@ export default router => {
         const userId = req.user._id;
         const userGroups = req.user.groups;
 
-        //Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
+        // Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
         const notes = await Note.find({ $or: [{ owner: userId }, { group: { $in: userGroups } }] });
 
         res.status(200).json({ notes: notes.map(note => note.toIndexJSON()) });
@@ -27,7 +27,7 @@ export default router => {
         [
             requireAuth,
 
-            //Валидация параметров
+            // Валидация параметров
             param('id').isMongoId(),
             checkValidation(404),
         ],
@@ -38,9 +38,9 @@ export default router => {
 
             const note = await Note.findOne({
                 $and: [
-                    //ID заметки
+                    // ID заметки
                     { _id: noteId },
-                    //Заметка принадлежит пользователю или группам в которых он состоит
+                    // Заметка принадлежит пользователю или группам в которых он состоит
                     { $or: [{ owner: userId }, { group: { $in: userGroups } }] },
                 ],
             });
@@ -49,8 +49,8 @@ export default router => {
                 return notFoundResponse(res);
             }
 
-            res.status(200).json({ note: note.toViewJSON() });
-        }
+            return res.status(200).json({ note: note.toViewJSON() });
+        },
     );
 
     /**
@@ -61,7 +61,7 @@ export default router => {
         [
             requireAuth,
 
-            //Валидация параметров
+            // Валидация параметров
             check('title').isString(),
             check('icon').isString(),
             check('iconColor').isString(),
@@ -84,17 +84,17 @@ export default router => {
             });
 
             if (groupId) {
-                //Если была указана группа - сохраняем как групповую заметку
+                // Если была указана группа - сохраняем как групповую заметку
                 newNote.group = groupId;
             } else {
-                //Иначе указываем владельцем пользователя
+                // Иначе указываем владельцем пользователя
                 newNote.owner = userId;
             }
 
             await newNote.save();
 
             res.status(201).json({ note: newNote.toViewJSON() });
-        }
+        },
     );
 
     /**
@@ -105,11 +105,11 @@ export default router => {
         [
             requireAuth,
 
-            //Валидация ID
+            // Валидация ID
             param('id').isMongoId(),
             checkValidation(404),
 
-            //Валидация параметров
+            // Валидация параметров
             check('title')
                 .optional()
                 .isString(),
@@ -131,9 +131,9 @@ export default router => {
 
             const note = await Note.findOne({
                 $and: [
-                    //ID заметки
+                    // ID заметки
                     { _id: noteId },
-                    //Заметка принадлежит пользователю или группам в которых он состоит
+                    // Заметка принадлежит пользователю или группам в которых он состоит
                     { $or: [{ owner: userId }, { group: { $in: userGroups } }] },
                 ],
             });
@@ -144,17 +144,25 @@ export default router => {
 
             const { title, icon, iconColor, content } = req.body;
 
-            //Обновляем только те поля которые пришли с запросом
-            _.map({ title, icon, iconColor, content }, (value, field) => {
-                if (!_.isUndefined(value)) {
-                    note[field] = value;
-                }
-            });
+            // Обновляем только те поля которые пришли с запросом
+            _.map(
+                {
+                    title,
+                    icon,
+                    iconColor,
+                    content,
+                },
+                (value, field) => {
+                    if (!_.isUndefined(value)) {
+                        note[field] = value;
+                    }
+                },
+            );
 
             await note.save();
 
             return res.json({ success: true });
-        }
+        },
     );
 
     /**
@@ -165,7 +173,7 @@ export default router => {
         [
             requireAuth,
 
-            //Валидация ID
+            // Валидация ID
             param('id').isMongoId(),
             checkValidation(404),
         ],
@@ -176,9 +184,9 @@ export default router => {
 
             const note = await Note.findOne({
                 $and: [
-                    //ID заметки
+                    // ID заметки
                     { _id: noteId },
-                    //Заметка принадлежит пользователю или группам в которых он состоит
+                    // Заметка принадлежит пользователю или группам в которых он состоит
                     { $or: [{ owner: userId }, { group: { $in: userGroups } }] },
                 ],
             });
@@ -190,6 +198,6 @@ export default router => {
             await note.remove();
 
             return res.json({ success: true });
-        }
+        },
     );
 };

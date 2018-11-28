@@ -1,5 +1,5 @@
-import app from '../../../app';
 import request from 'supertest';
+import app from '../../../app';
 import User from '../../../models/User';
 import { resetDB } from '../../../utils/db';
 
@@ -27,16 +27,16 @@ describe('registration', () => {
         expect(response.statusCode).toBe(200);
         expect(response.body.success).toBe(true);
 
-        //Проверяем что создался пользователь в базе
+        // Проверяем что создался пользователь в базе
         const user = await User.findOne({ email: newUser.email });
 
-        //пароль должен быть захеширован
+        // пароль должен быть захеширован
         expect(user.password).not.toBe(newUser.password);
 
-        //Регистрация не должна быть подтвержденной
+        // Регистрация не должна быть подтвержденной
         expect(user.registration.verified).toBe(false);
 
-        //Должен быть сгенерирован код верификации
+        // Должен быть сгенерирован код верификации
         expect(user.registration.code.length).toBeGreaterThan(3);
 
         verificationCode = user.registration.code;
@@ -64,10 +64,10 @@ describe('registration', () => {
         expect(response.statusCode).toBe(200);
         expect(response.body.success).toBe(true);
 
-        //Проверяем что пользователь в базе поменялся
+        // Проверяем что пользователь в базе поменялся
         const user = await User.findOne({ email: newUser.email });
 
-        //Регистрация должна быть подтвержденной
+        // Регистрация должна быть подтвержденной
         expect(user.registration.verified).toBe(true);
     });
 });

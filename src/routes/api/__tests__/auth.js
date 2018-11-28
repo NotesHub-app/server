@@ -1,8 +1,6 @@
-import app from '../../../app';
 import request from 'supertest';
 import User from '../../../models/User';
-import { randomString } from '../../../utils/string';
-import dayjs from 'dayjs';
+import app from '../../../app';
 import { resetDB } from '../../../utils/db';
 
 const validUser = {
