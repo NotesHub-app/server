@@ -2122,6 +2122,11 @@ eslint-plugin-import@^2.14.0:
     read-pkg-up "^2.0.0"
     resolve "^1.6.0"
 
+eslint-plugin-sonarjs@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-sonarjs/-/eslint-plugin-sonarjs-0.2.0.tgz#e78d6f8c533e941d97fdcbf2862811b5a4565892"
+  integrity sha512-sTG7XYJ82OL9mcCNctjYkpivBPMT/4KNwReIRVdbPjc5A8YyVOqcWCgFpJ1TAMoKBpoA8iC7m4taIl83hdsgyA==
+
 eslint-restricted-globals@^0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/eslint-restricted-globals/-/eslint-restricted-globals-0.1.1.tgz#35f0d5cbc64c2e3ed62e93b4b1a7af05ba7ed4d7"

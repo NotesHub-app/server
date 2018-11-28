@@ -3,6 +3,10 @@ import User from '../../../models/User';
 import app from '../../../app';
 import { resetDB } from '../../../utils/db';
 
+const ROUTES = {
+    login: '/api/auth/login',
+};
+
 const validUser = {
     email: 'valid@email.com',
     password: 'good_password',
@@ -19,13 +23,13 @@ describe('auth', () => {
     });
 
     test('[POST /api/auth/login] без параметров', async () => {
-        const response = await request(app).post('/api/auth/login');
+        const response = await request(app).post(ROUTES.login);
         expect(response.statusCode).toBe(400);
     });
 
     test('[POST /api/auth/login] неверная учетка', async () => {
         const response = await request(app)
-            .post('/api/auth/login')
+            .post(ROUTES.login)
             .send({ email: 'wrong@email.com', password: 'wrong_password' });
 
         expect(response.statusCode).toBe(401);
@@ -35,7 +39,7 @@ describe('auth', () => {
         await new User(validUser).save();
 
         const response = await request(app)
-            .post('/api/auth/login')
+            .post(ROUTES.login)
             .send({ email: validUser.email, password: validUser.password });
 
         expect(response.statusCode).toBe(200);

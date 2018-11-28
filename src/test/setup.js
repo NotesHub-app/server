@@ -1,10 +1,10 @@
 const path = require('path');
 const fs = require('fs');
-const MongodbMemoryServer = require('mongodb-memory-server');
+const MongodbMemoryServer = require('mongodb-memory-server').default;
 
 const globalConfigPath = path.join(__dirname, 'globalConfig.json');
 
-const mongod = new MongodbMemoryServer.default({
+const mongod = new MongodbMemoryServer({
     instance: {
         dbName: 'jest',
     },

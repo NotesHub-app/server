@@ -21,7 +21,7 @@ const mongoSchema = new mongoose.Schema(
             },
         ],
     },
-    { timestamps: true },
+    { timestamps: true }
 );
 
 mongoSchema.pre('save', async function() {
@@ -43,7 +43,7 @@ mongoSchema.pre('save', async function() {
             // Там где группа указана, хотя пользователя там быть не должно
             { $and: [{ groups: group._id }, { _id: { $nin: userIds } }] },
             // Убираем ID группы из массива групп
-            { $pull: { groups: group._id } },
+            { $pull: { groups: group._id } }
         );
     }
 });
@@ -51,7 +51,7 @@ mongoSchema.pre('save', async function() {
 class GroupClass {
     /** Для получения своего списка групп */
     toIndexJSON(userId) {
-        const role = this.users.find(i => i.user.toString() === userId.toString()).role;
+        const { role } = this.users.find(i => i.user.toString() === userId.toString());
 
         return {
             id: this._id,

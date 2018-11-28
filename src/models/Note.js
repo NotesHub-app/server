@@ -1,7 +1,4 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { secret } from '../config';
 
 const mongoSchema = new mongoose.Schema(
     {

@@ -6,17 +6,14 @@ import { notFoundResponse, validationErrorResponse } from '../utils/response';
  * @param code
  * @returns {Function}
  */
-export function checkValidation(code = 422) {
-    return function(req, res, next) {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            switch (code) {
-            case 404:
-                return notFoundResponse(res);
-            default:
-                return validationErrorResponse(res, errors);
-            }
+export const checkValidation = (code = 422) => (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        if (code === 404) {
+            return notFoundResponse(res);
         }
-        next();
-    };
-}
+
+        return validationErrorResponse(res, errors);
+    }
+    next();
+};

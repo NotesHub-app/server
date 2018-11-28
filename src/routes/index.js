@@ -1,18 +1,26 @@
 import express from 'express';
 import '../config/passport';
-import fs from 'fs';
-import path from 'path';
+import authApiRoutes from './api/auth';
+import filesApiRoutes from './api/files';
+import groupsApiRoutes from './api/groups';
+import notesApiRoutes from './api/notes';
+import registrationApiRoutes from './api/registration';
+import restorePasswordApiRoutes from './api/restorePassword';
+import usersApiRoutes from './api/users';
 
 export default app => {
     // Инициализируем API роуты
-    const apiRoutes = express.Router();
+    const apiRouter = express.Router();
 
-    for (const file of fs.readdirSync(path.join(__dirname, 'api'))) {
-        if (file !== '__tests__') {
-            require(`./api/${file}`).default(apiRoutes);
-        }
-    }
-    app.use('/api', apiRoutes);
+    authApiRoutes(apiRouter);
+    filesApiRoutes(apiRouter);
+    groupsApiRoutes(apiRouter);
+    notesApiRoutes(apiRouter);
+    registrationApiRoutes(apiRouter);
+    restorePasswordApiRoutes(apiRouter);
+    usersApiRoutes(apiRouter);
+
+    app.use('/api', apiRouter);
 
     // 404 handler
     app.use((req, res, next) => {
@@ -22,7 +30,7 @@ export default app => {
     });
 
     // catch ERROR handler
-    app.use((err, req, res, next) => {
+    app.use((err, req, res) => {
         if (process.env.NODE_ENV !== 'production') {
             console.warn(err.stack);
         }

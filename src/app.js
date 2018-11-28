@@ -23,7 +23,7 @@ app.use(
         limit: '50mb',
         extended: true,
         parameterLimit: 50000,
-    }),
+    })
 );
 app.use(bodyParser.json({ limit: '50mb' }));
 
@@ -39,7 +39,7 @@ mongoose.connect(
         useNewUrlParser: true,
         useCreateIndex: true,
         useFindAndModify: false,
-    },
+    }
 );
 
 if (process.env.NODE_ENV === 'development') {

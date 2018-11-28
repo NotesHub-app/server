@@ -5,7 +5,7 @@
  * @returns {*}
  */
 export function notFoundResponse(res, message = 'Item does not exist') {
-    return res.status(404).json({ error: 'Item does not exist' });
+    return res.status(404).json({ error: message });
 }
 
 /**

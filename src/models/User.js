@@ -22,7 +22,7 @@ const mongoSchema = new mongoose.Schema(
         },
         groups: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Group' }],
     },
-    { timestamps: true },
+    { timestamps: true }
 );
 
 mongoSchema.plugin(uniqueValidator, { message: 'is already taken.' });
@@ -41,8 +41,8 @@ mongoSchema.pre('save', async function() {
 });
 
 class UserClass {
-    async comparePassword(candidatePassword) {
-        return await bcrypt.compare(candidatePassword, this.password);
+    comparePassword(candidatePassword) {
+        return bcrypt.compare(candidatePassword, this.password);
     }
 
     generateJWT() {
@@ -51,7 +51,7 @@ class UserClass {
                 id: this._id,
             },
             secret,
-            { expiresIn: 60 * 60 },
+            { expiresIn: 60 * 60 }
         );
     }
 
