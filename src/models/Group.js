@@ -13,7 +13,7 @@ const mongoSchema = new mongoose.Schema(
 class GroupClass {
     /** Для получения своего списка групп */
     toIndexJSON(user) {
-        const { role } = user.groups.find(i => i.group.toString() === this._id.toString());
+        const { role } = user.groups.find(i => i.group._id.toString() === this._id.toString());
 
         return {
             id: this._id,

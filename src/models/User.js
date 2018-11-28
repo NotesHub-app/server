@@ -50,10 +50,10 @@ mongoSchema.pre('save', async function() {
 
 class UserClass {
     get groupIds() {
-        return this.groups.map(groupItem => groupItem.group);
+        return this.groups.map(groupItem => groupItem.group._id);
     }
 
-    comparePassword(candidatePassword) {
+    async comparePassword(candidatePassword) {
         return bcrypt.compare(candidatePassword, this.password);
     }
 
