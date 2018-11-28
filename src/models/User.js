@@ -3,6 +3,7 @@ import uniqueValidator from 'mongoose-unique-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { secret } from '../config';
+import Group from './Group';
 
 const mongoSchema = new mongoose.Schema(
     {
@@ -20,7 +21,6 @@ const mongoSchema = new mongoose.Schema(
             code: String,
             codeExpire: Date,
         },
-        groups: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Group' }],
     },
     { timestamps: true }
 );
@@ -41,6 +41,11 @@ mongoSchema.pre('save', async function() {
 });
 
 class UserClass {
+    get groups() {
+        const userId = this._id;
+        return Group.find({ 'users.user': userId });
+    }
+
     comparePassword(candidatePassword) {
         return bcrypt.compare(candidatePassword, this.password);
     }

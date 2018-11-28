@@ -24,30 +24,6 @@ const mongoSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-mongoSchema.pre('save', async function() {
-    const group = this;
-
-    // Если поменялись пользователи у группы
-    if (group.isModified('users')) {
-        const userIds = [];
-        for (const groupUser of group.users) {
-            const userId = groupUser.user;
-            userIds.push(userId);
-        }
-
-        // Добавляем группу для всех пользователей массива userIds
-        await User.findOneAndUpdate({ _id: { $in: userIds } }, { $addToSet: { groups: group._id } });
-
-        // Убираем группу у остальных
-        await User.findOneAndUpdate(
-            // Там где группа указана, хотя пользователя там быть не должно
-            { $and: [{ groups: group._id }, { _id: { $nin: userIds } }] },
-            // Убираем ID группы из массива групп
-            { $pull: { groups: group._id } }
-        );
-    }
-});
-
 class GroupClass {
     /** Для получения своего списка групп */
     toIndexJSON(userId) {
