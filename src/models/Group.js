@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import User from './User';
 
 const mongoSchema = new mongoose.Schema(
     {
@@ -7,27 +6,14 @@ const mongoSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        users: [
-            {
-                user: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'User',
-                    required: true,
-                },
-                role: {
-                    type: Number,
-                    required: true,
-                },
-            },
-        ],
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 class GroupClass {
     /** Для получения своего списка групп */
-    toIndexJSON(userId) {
-        const { role } = this.users.find(i => i.user.toString() === userId.toString());
+    toIndexJSON(user) {
+        const { role } = user.groups.find(i => i.group.toString() === this._id.toString());
 
         return {
             id: this._id,

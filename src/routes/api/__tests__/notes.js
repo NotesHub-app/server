@@ -18,8 +18,8 @@ const generateNote = (suffix = '') => ({
 
 describe('notes', () => {
     beforeAll(async () => {
-        group = await new Group({ title: 'fooGroup', users: [] }).save();
-        author = await new User({ email: 'author@email.com', groups: [group._id] }).save();
+        group = await new Group({ title: 'fooGroup' }).save();
+        author = await new User({ email: 'author@email.com', groups: [{ group, role: 0 }] }).save();
     });
 
     afterAll(async () => {
@@ -27,11 +27,12 @@ describe('notes', () => {
     });
 
     test('[GET /api/notes] получения списка заметок', async () => {
-        // Создаем владельцев
-
-        const anotherGroup = await new Group({ title: 'fooGroup', users: [] }).save();
-
-        const anotherUser = await new User({ email: 'another@email.com', groups: [] }).save();
+        // Создаем левую группу и пользователя
+        const anotherGroup = await new Group({ title: 'fooGroup' }).save();
+        const anotherUser = await new User({
+            email: 'another@email.com',
+            groups: [{ group: anotherGroup, role: 0 }],
+        }).save();
 
         // Создаем заметку принадлежащих пользователю
         await new Note({ ...generateNote(), owner: author.id }).save();

@@ -3,7 +3,6 @@ import uniqueValidator from 'mongoose-unique-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { secret } from '../config';
-import Group from './Group';
 
 const mongoSchema = new mongoose.Schema(
     {
@@ -21,8 +20,17 @@ const mongoSchema = new mongoose.Schema(
             code: String,
             codeExpire: Date,
         },
+        groups: [
+            {
+                group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' },
+                role: {
+                    type: Number,
+                    required: true,
+                },
+            },
+        ],
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 mongoSchema.plugin(uniqueValidator, { message: 'is already taken.' });
@@ -41,9 +49,8 @@ mongoSchema.pre('save', async function() {
 });
 
 class UserClass {
-    get groups() {
-        const userId = this._id;
-        return Group.find({ 'users.user': userId });
+    get groupIds() {
+        return this.groups.map(groupItem => groupItem.group);
     }
 
     comparePassword(candidatePassword) {
@@ -56,7 +63,7 @@ class UserClass {
                 id: this._id,
             },
             secret,
-            { expiresIn: 60 * 60 }
+            { expiresIn: 60 * 60 },
         );
     }
 

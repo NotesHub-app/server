@@ -8,13 +8,10 @@ export default router => {
      * получение списка своих групп
      */
     router.get('/groups', requireAuth, async (req, res) => {
-        const userId = req.user._id;
-        const userGroups = req.user.groups;
-
         // Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
-        const groups = await Group.find({ _id: { $in: userGroups } });
+        const groups = await Group.find({ _id: { $in: req.user.groupIds } });
 
-        res.status(200).json({ groups: groups.map(group => group.toIndexJSON(userId)) });
+        res.status(200).json({ groups: groups.map(group => group.toIndexJSON(req.user)) });
     });
 
     /**
@@ -32,15 +29,13 @@ export default router => {
             checkValidation(),
         ],
         async (req, res) => {
-            const userId = req.user._id;
-
             const { title } = req.body;
 
             const newGroup = new Group({
                 title,
                 users: [
                     {
-                        user: userId,
+                        user: req.user._id,
                         role: 0,
                     },
                 ],
@@ -48,7 +43,7 @@ export default router => {
 
             await newGroup.save();
 
-            res.status(201).json({ group: newGroup.toIndexJSON(userId) });
+            res.status(201).json({ group: newGroup.toIndexJSON(req.user) });
         },
     );
 

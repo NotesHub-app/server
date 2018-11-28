@@ -10,11 +10,8 @@ export default router => {
      * получение дерева заметок
      */
     router.get('/notes', requireAuth, async (req, res) => {
-        const userId = req.user._id;
-        const userGroups = req.user.groups;
-
         // Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
-        const notes = await Note.find({ $or: [{ owner: userId }, { group: { $in: userGroups } }] });
+        const notes = await Note.find({ $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] });
 
         res.status(200).json({ notes: notes.map(note => note.toIndexJSON()) });
     });
@@ -33,15 +30,13 @@ export default router => {
         ],
         async (req, res) => {
             const noteId = req.params.id;
-            const userId = req.user._id;
-            const userGroups = req.user.groups;
 
             const note = await Note.findOne({
                 $and: [
                     // ID заметки
                     { _id: noteId },
                     // Заметка принадлежит пользователю или группам в которых он состоит
-                    { $or: [{ owner: userId }, { group: { $in: userGroups } }] },
+                    { $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] },
                 ],
             });
 
@@ -72,8 +67,6 @@ export default router => {
             checkValidation(),
         ],
         async (req, res) => {
-            const userId = req.user._id;
-
             const { title, icon, iconColor, content, groupId } = req.body;
 
             const newNote = new Note({
@@ -88,7 +81,7 @@ export default router => {
                 newNote.group = groupId;
             } else {
                 // Иначе указываем владельцем пользователя
-                newNote.owner = userId;
+                newNote.owner = req.user._id;
             }
 
             await newNote.save();
@@ -126,15 +119,13 @@ export default router => {
         ],
         async (req, res) => {
             const noteId = req.params.id;
-            const userId = req.user._id;
-            const userGroups = req.user.groups;
 
             const note = await Note.findOne({
                 $and: [
                     // ID заметки
                     { _id: noteId },
                     // Заметка принадлежит пользователю или группам в которых он состоит
-                    { $or: [{ owner: userId }, { group: { $in: userGroups } }] },
+                    { $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] },
                 ],
             });
 
@@ -179,15 +170,13 @@ export default router => {
         ],
         async (req, res) => {
             const noteId = req.params.id;
-            const userId = req.user._id;
-            const userGroups = req.user.groups;
 
             const note = await Note.findOne({
                 $and: [
                     // ID заметки
                     { _id: noteId },
                     // Заметка принадлежит пользователю или группам в которых он состоит
-                    { $or: [{ owner: userId }, { group: { $in: userGroups } }] },
+                    { $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] },
                 ],
             });
 

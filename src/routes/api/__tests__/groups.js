@@ -10,14 +10,16 @@ describe('notes', () => {
     });
 
     test('[GET /api/groups] получения списка своих групп', async () => {
-        const user = await new User({ email: 'user@email.com', groups: [] }).save();
-        const group = await new Group({ title: 'group', users: [{ user: user.id, role: 0 }] }).save();
+        // Нужный пользователь и нужная группа
+        const group = await new Group({ title: 'group' }).save();
+        const user = await new User({ email: 'user@email.com', groups: [{ group, role: 0 }] }).save();
 
-        const anotherUser = await new User({ email: 'another-user@email.com', groups: [] }).save();
-        await new Group({
+        // Другая группа и другой пользователь
+        const anotherGroup = await new Group({
             title: 'anotherGroup',
-            users: [{ user: anotherUser.id, role: 0 }],
         }).save();
+        await new User({ email: 'another-user@email.com', groups: [{ group: anotherGroup, role: 0 }] }).save();
+
 
         const response = await request(app)
             .get('/api/groups')
