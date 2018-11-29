@@ -25,5 +25,3 @@ describe('GroupModel', () => {
         expect(result[0].toString()).toBe(group._id.toString());
     });
 });
-
-

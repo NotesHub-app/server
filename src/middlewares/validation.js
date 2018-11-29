@@ -15,5 +15,5 @@ export const checkValidation = (code = 422) => (req, res, next) => {
 
         return validationErrorResponse(res, errors);
     }
-    next();
+    return next();
 };
