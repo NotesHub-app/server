@@ -13,6 +13,7 @@ module.exports = {
             {
                 allow: [
                     '_id',
+                    '_previous',
                     '__MONGO_URI__',
                     '__MONGO_DB_NAME__',
                     '__MONGO_URI__',
@@ -48,5 +49,6 @@ module.exports = {
         ],
         'no-restricted-syntax': ['error', 'ForInStatement'],
         'sonarjs/no-duplicate-string': 'off',
+        'no-param-reassign': 'off',
     },
 };

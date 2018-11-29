@@ -12,18 +12,24 @@ import routes from './routes';
 import './models';
 
 const app = express();
+
+// Отключаем в хедерах сообщение о том что используется Express
 app.disable('x-powered-by');
 
+// Включаем CORS
 app.use(cors());
 
-// Normal express config defaults
-app.use(morgan('dev'));
+// Выводим HTTP запросы в консоль
+if (process.env.NODE_ENV !== 'test') {
+    app.use(morgan('dev'));
+}
+
 app.use(
     bodyParser.urlencoded({
         limit: '50mb',
         extended: true,
         parameterLimit: 50000,
-    })
+    }),
 );
 app.use(bodyParser.json({ limit: '50mb' }));
 
@@ -39,7 +45,7 @@ mongoose.connect(
         useNewUrlParser: true,
         useCreateIndex: true,
         useFindAndModify: false,
-    }
+    },
 );
 
 if (process.env.NODE_ENV === 'development') {
@@ -47,6 +53,7 @@ if (process.env.NODE_ENV === 'development') {
     mongoose.set('debug', true);
 }
 
+// Подключаем роуты
 routes(app);
 
 // Экспортируем сервер для вызова из тестов

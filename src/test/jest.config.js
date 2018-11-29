@@ -1,8 +1,8 @@
-// const { defaults } = require('jest-config');
 const path = require('path');
 
 module.exports = {
     rootDir: process.cwd(),
+    // testRegex: "__tests__/(groups|notes).js",
     // forceExit: true,
 
     globalSetup: path.join(__dirname, 'setup.js'),

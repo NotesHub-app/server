@@ -4,22 +4,17 @@ import Note from '../../../models/Note';
 import User from '../../../models/User';
 import Group from '../../../models/Group';
 import { resetDB } from '../../../utils/db';
+import { generateNote } from '../../../utils/fake';
 
 let author;
+let anotherAuthor;
 let group;
-
-const generateNote = (suffix = '') => ({
-    title: `note${suffix}`,
-    icon: `icon${suffix}`,
-    iconColor: `#FFFFFF`,
-    content: `content${suffix}`,
-    history: [],
-});
 
 describe('notes', () => {
     beforeAll(async () => {
         group = await new Group({ title: 'fooGroup' }).save();
         author = await new User({ email: 'author@email.com', groups: [{ group, role: 0 }] }).save();
+        anotherAuthor = await new User({ email: 'anotherAuthor@email.com', groups: [] }).save();
     });
 
     afterAll(async () => {
@@ -109,5 +104,15 @@ describe('notes', () => {
             .set('Authorization', `JWT ${author.generateJWT()}`);
 
         expect(response.statusCode).toBe(200);
+    });
+
+    test('[DELETE /api/notes/:id] нельзя удалить чужую', async () => {
+        const note = await new Note({ ...generateNote(), title: 'note_to_remove', owner: anotherAuthor._id }).save();
+
+        const response = await request(app)
+            .delete(`/api/notes/${note._id}`)
+            .set('Authorization', `JWT ${author.generateJWT()}`);
+
+        expect(response.statusCode).toBe(404);
     });
 });

@@ -35,14 +35,14 @@ const mongoSchema = new mongoose.Schema(
 
 mongoSchema.plugin(uniqueValidator, { message: 'is already taken.' });
 
-// При сохранении хешировать пароль
 mongoSchema.pre('save', async function() {
     const user = this;
-    const SALT_FACTOR = 10;
 
+    // При сохранении хешировать пароль
     if (!user.isModified('password')) {
         return;
     }
+    const SALT_FACTOR = 10;
 
     const salt = await bcrypt.genSalt(SALT_FACTOR);
     user.password = await bcrypt.hash(user.password, salt);

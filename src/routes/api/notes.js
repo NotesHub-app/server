@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { requireAuth } from '../../middlewares/auth';
 import Note from '../../models/Note';
 import { checkValidation } from '../../middlewares/validation';
-import { notFoundResponse } from '../../utils/response';
+import { forbiddenResponse, notFoundResponse } from '../../utils/response';
 
 export default router => {
     /**
@@ -128,15 +128,18 @@ export default router => {
                     { $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] },
                 ],
             });
-
             if (!note) {
                 return notFoundResponse(res);
+            }
+
+            if (!note.checkAllowToEdit(req.user)) {
+                return forbiddenResponse(res);
             }
 
             const { title, icon, iconColor, content } = req.body;
 
             // Обновляем только те поля которые пришли с запросом
-            _.map(
+            _.forEach(
                 {
                     title,
                     icon,
@@ -179,9 +182,12 @@ export default router => {
                     { $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] },
                 ],
             });
-
             if (!note) {
                 return notFoundResponse(res);
+            }
+
+            if (!note.checkAllowToEdit(req.user)) {
+                return forbiddenResponse(res);
             }
 
             await note.remove();
