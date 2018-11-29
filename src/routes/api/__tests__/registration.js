@@ -11,63 +11,67 @@ describe('registration', () => {
         await resetDB();
     });
 
-    test('[POST /api/registration] неверные параметры регистрации', async () => {
-        const response = await request(app)
-            .post('/api/registration')
-            .send({ param: 'wrong' });
+    describe('[POST /api/registration]', () => {
+        test('неверные параметры регистрации', async () => {
+            const response = await request(app)
+                .post('/api/registration')
+                .send({ param: 'wrong' });
 
-        expect(response.statusCode).toBe(422);
+            expect(response.statusCode).toBe(422);
+        });
+
+        test('успешная регистрация', async () => {
+            const response = await request(app)
+                .post('/api/registration')
+                .send(newUser);
+
+            expect(response.statusCode).toBe(200);
+            expect(response.body.success).toBe(true);
+
+            // Проверяем что создался пользователь в базе
+            const user = await User.findOne({ email: newUser.email });
+
+            // пароль должен быть захеширован
+            expect(user.password).not.toBe(newUser.password);
+
+            // Регистрация не должна быть подтвержденной
+            expect(user.registration.verified).toBe(false);
+
+            // Должен быть сгенерирован код верификации
+            expect(user.registration.code.length).toBeGreaterThan(3);
+
+            verificationCode = user.registration.code;
+        });
     });
 
-    test('[POST /api/registration] успешная регистрация', async () => {
-        const response = await request(app)
-            .post('/api/registration')
-            .send(newUser);
+    describe('[POST /registration/confirm]', () => {
+        test('используем неверный код подтверждения', async () => {
+            const response = await request(app)
+                .post('/api/registration/confirm')
+                .send({
+                    email: newUser.email,
+                    code: 'WRONG_CODE',
+                });
 
-        expect(response.statusCode).toBe(200);
-        expect(response.body.success).toBe(true);
+            expect(response.statusCode).toBe(404);
+        });
 
-        // Проверяем что создался пользователь в базе
-        const user = await User.findOne({ email: newUser.email });
+        test('успешное подтверждение регистрации', async () => {
+            const response = await request(app)
+                .post('/api/registration/confirm')
+                .send({
+                    email: newUser.email,
+                    code: verificationCode,
+                });
 
-        // пароль должен быть захеширован
-        expect(user.password).not.toBe(newUser.password);
+            expect(response.statusCode).toBe(200);
+            expect(response.body.success).toBe(true);
 
-        // Регистрация не должна быть подтвержденной
-        expect(user.registration.verified).toBe(false);
+            // Проверяем что пользователь в базе поменялся
+            const user = await User.findOne({ email: newUser.email });
 
-        // Должен быть сгенерирован код верификации
-        expect(user.registration.code.length).toBeGreaterThan(3);
-
-        verificationCode = user.registration.code;
-    });
-
-    test('[POST /registration/confirm] используем неверный код подтверждения', async () => {
-        const response = await request(app)
-            .post('/api/registration/confirm')
-            .send({
-                email: newUser.email,
-                code: 'WRONG_CODE',
-            });
-
-        expect(response.statusCode).toBe(404);
-    });
-
-    test('[POST /registration/confirm] успешное подтверждение регистрации', async () => {
-        const response = await request(app)
-            .post('/api/registration/confirm')
-            .send({
-                email: newUser.email,
-                code: verificationCode,
-            });
-
-        expect(response.statusCode).toBe(200);
-        expect(response.body.success).toBe(true);
-
-        // Проверяем что пользователь в базе поменялся
-        const user = await User.findOne({ email: newUser.email });
-
-        // Регистрация должна быть подтвержденной
-        expect(user.registration.verified).toBe(true);
+            // Регистрация должна быть подтвержденной
+            expect(user.registration.verified).toBe(true);
+        });
     });
 });

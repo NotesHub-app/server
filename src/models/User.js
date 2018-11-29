@@ -29,8 +29,20 @@ const mongoSchema = new mongoose.Schema(
                 },
             },
         ],
+        restorePasswordCodes: [
+            {
+                code: {
+                    type: String,
+                    required: true,
+                },
+                expireDate: {
+                    type: Date,
+                    required: true,
+                },
+            },
+        ],
     },
-    { timestamps: true },
+    { timestamps: true }
 );
 
 mongoSchema.plugin(uniqueValidator, { message: 'is already taken.' });
@@ -50,7 +62,7 @@ mongoSchema.pre('save', async function() {
 
 class UserClass {
     get groupIds() {
-        return this.groups.map(groupItem => groupItem.group._id);
+        return this.groups.map(groupItem => groupItem.group._id.toString());
     }
 
     async comparePassword(candidatePassword) {
@@ -63,7 +75,7 @@ class UserClass {
                 id: this._id,
             },
             secret,
-            { expiresIn: 60 * 60 },
+            { expiresIn: 60 * 60 }
         );
     }
 

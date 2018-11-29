@@ -157,17 +157,23 @@ describe('groups', () => {
     });
 
     describe('[POST /groups/:id/join]', () => {
-        beforeEach(async () => {
+        let group;
+        let author;
+        let anotherUser;
+        let anotherGroup;
+
+        beforeAll(async () => {
             await resetDB();
+
+            // Нужный пользователь и нужная группа
+            group = await new Group({ title: 'group' }).save();
+            author = await new User({ email: 'user@email.com', groups: [{ group, role: 0 }] }).save();
+
+            anotherGroup = await new Group({ title: 'group' }).save();
+            anotherUser = await new User({ email: 'user2@email.com', groups: [] }).save();
         });
 
         test('входим в группу по инвайт ссылке', async () => {
-            // Нужный пользователь и нужная группа
-            const group = await new Group({ title: 'group' }).save();
-            const author = await new User({ email: 'user@email.com', groups: [{ group, role: 0 }] }).save();
-
-            let anotherUser = await new User({ email: 'user2@email.com', groups: [] }).save();
-
             const responseInvite = await request(app)
                 .get(`/api/groups/${group._id}/invite`)
                 .send({ role: 1 })
@@ -185,6 +191,38 @@ describe('groups', () => {
             anotherUser = await User.findById(anotherUser._id);
             expect(anotherUser.groups[0].group._id.toString()).toBe(group._id.toString());
             expect(anotherUser.groups[0].role).toBe(1);
+        });
+
+        test('пытаемся войти по инвайт ссылке в группу, в которой уже есть', async () => {
+            const responseInvite = await request(app)
+                .get(`/api/groups/${group._id}/invite`)
+                .send({ role: 1 })
+                .set('Authorization', `JWT ${author.generateJWT()}`);
+
+            const { code, groupId } = responseInvite.body;
+
+            const responseJoin = await request(app)
+                .post(`/api/groups/${groupId}/join`)
+                .send({ code })
+                .set('Authorization', `JWT ${author.generateJWT()}`);
+
+            expect(responseJoin.statusCode).toBe(409);
+        });
+
+        test('пытаемся войти по инвайт ссылке в левую группу', async () => {
+            const responseInvite = await request(app)
+                .get(`/api/groups/${group._id}/invite`)
+                .send({ role: 1 })
+                .set('Authorization', `JWT ${author.generateJWT()}`);
+
+            const { code } = responseInvite.body;
+
+            const responseJoin = await request(app)
+                .post(`/api/groups/${anotherGroup._id}/join`)
+                .send({ code })
+                .set('Authorization', `JWT ${anotherUser.generateJWT()}`);
+
+            expect(responseJoin.statusCode).toBe(403);
         });
     });
 });

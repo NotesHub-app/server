@@ -21,98 +21,110 @@ describe('notes', () => {
         await resetDB();
     });
 
-    test('[GET /api/notes] получения списка заметок', async () => {
-        // Создаем левую группу и пользователя
-        const anotherGroup = await new Group({ title: 'fooGroup' }).save();
-        const anotherUser = await new User({
-            email: 'another@email.com',
-            groups: [{ group: anotherGroup, role: 0 }],
-        }).save();
+    describe('[GET /api/notes]', () => {
+        test('получения списка заметок', async () => {
+            // Создаем левую группу и пользователя
+            const anotherGroup = await new Group({ title: 'fooGroup' }).save();
+            const anotherUser = await new User({
+                email: 'another@email.com',
+                groups: [{ group: anotherGroup, role: 0 }],
+            }).save();
 
-        // Создаем заметку принадлежащих пользователю
-        await new Note({ ...generateNote(), owner: author.id }).save();
+            // Создаем заметку принадлежащих пользователю
+            await new Note({ ...generateNote(), owner: author.id }).save();
 
-        // Создаем заметку НЕ принадлежащую пользователю
-        await new Note({ ...generateNote(), owner: anotherUser._id }).save();
+            // Создаем заметку НЕ принадлежащую пользователю
+            await new Note({ ...generateNote(), owner: anotherUser._id }).save();
 
-        // Создаем заметку принадлежащую группе в котороый состоит пользователь
-        await new Note({ ...generateNote(), group: group._id }).save();
+            // Создаем заметку принадлежащую группе в котороый состоит пользователь
+            await new Note({ ...generateNote(), group: group._id }).save();
 
-        // Создаем заметку НЕ принадлежащую группе в котороый состоит пользователь
-        await new Note({ ...generateNote(), group: anotherGroup._id }).save();
+            // Создаем заметку НЕ принадлежащую группе в котороый состоит пользователь
+            await new Note({ ...generateNote(), group: anotherGroup._id }).save();
 
-        const response = await request(app)
-            .get('/api/notes')
-            .set('Authorization', `JWT ${author.generateJWT()}`);
+            const response = await request(app)
+                .get('/api/notes')
+                .set('Authorization', `JWT ${author.generateJWT()}`);
 
-        expect(response.statusCode).toBe(200);
+            expect(response.statusCode).toBe(200);
 
-        // 1 заметка пользователя + 1 заметка группы в котороый состоит пользователь
-        expect(response.body.notes.length).toBe(2);
+            // 1 заметка пользователя + 1 заметка группы в котороый состоит пользователь
+            expect(response.body.notes.length).toBe(2);
+        });
     });
 
-    test('[GET /api/notes/:id] получения заметки по неверному ID', async () => {
-        const response = await request(app)
-            .get('/api/notes/WRONG_ID')
-            .set('Authorization', `JWT ${author.generateJWT()}`);
+    describe('[GET /api/notes/:id]', () => {
+        test('получения заметки по неверному ID', async () => {
+            const response = await request(app)
+                .get('/api/notes/WRONG_ID')
+                .set('Authorization', `JWT ${author.generateJWT()}`);
 
-        expect(response.statusCode).toBe(404);
+            expect(response.statusCode).toBe(404);
+        });
+
+        test('получения заметки', async () => {
+            const note = await new Note({ ...generateNote(), owner: author.id }).save();
+
+            const response = await request(app)
+                .get(`/api/notes/${note._id}`)
+                .set('Authorization', `JWT ${author.generateJWT()}`);
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body.note.title).toBe(note.title);
+            expect(response.body.note.content).toBe(note.content);
+        });
     });
 
-    test('[GET /api/notes/:id] получения заметки', async () => {
-        const note = await new Note({ ...generateNote(), owner: author.id }).save();
+    describe('[POST /api/notes]', () => {
+        test('создание заметки с невалидными параметрами', async () => {
+            const response = await request(app)
+                .post(`/api/notes`)
+                .send({ random: 'data' })
+                .set('Authorization', `JWT ${author.generateJWT()}`);
 
-        const response = await request(app)
-            .get(`/api/notes/${note._id}`)
-            .set('Authorization', `JWT ${author.generateJWT()}`);
+            expect(response.statusCode).toBe(422);
+        });
 
-        expect(response.statusCode).toBe(200);
+        test('[POST /api/notes] создание заметки', async () => {
+            const newNote = {
+                ...generateNote(),
+            };
+            const response = await request(app)
+                .post(`/api/notes`)
+                .send(newNote)
+                .set('Authorization', `JWT ${author.generateJWT()}`);
 
-        expect(response.body.note.title).toBe(note.title);
-        expect(response.body.note.content).toBe(note.content);
+            expect(response.statusCode).toBe(201);
+
+            expect(response.body.note.title).toBe(newNote.title);
+            expect(response.body.note.content).toBe(newNote.content);
+        });
     });
 
-    test('[POST /api/notes] создание заметки с невалидными параметрами', async () => {
-        const response = await request(app)
-            .post(`/api/notes`)
-            .send({ random: 'data' })
-            .set('Authorization', `JWT ${author.generateJWT()}`);
+    describe('[DELETE /api/notes/:id]', () => {
+        test('удаление заметки', async () => {
+            const note = await new Note({ ...generateNote(), title: 'note_to_remove', owner: author._id }).save();
 
-        expect(response.statusCode).toBe(422);
-    });
+            const response = await request(app)
+                .delete(`/api/notes/${note._id}`)
+                .set('Authorization', `JWT ${author.generateJWT()}`);
 
-    test('[POST /api/notes] создание заметки', async () => {
-        const newNote = {
-            ...generateNote(),
-        };
-        const response = await request(app)
-            .post(`/api/notes`)
-            .send(newNote)
-            .set('Authorization', `JWT ${author.generateJWT()}`);
+            expect(response.statusCode).toBe(200);
+        });
 
-        expect(response.statusCode).toBe(201);
+        test('нельзя удалить чужую', async () => {
+            const note = await new Note({
+                ...generateNote(),
+                title: 'note_to_remove',
+                owner: anotherAuthor._id,
+            }).save();
 
-        expect(response.body.note.title).toBe(newNote.title);
-        expect(response.body.note.content).toBe(newNote.content);
-    });
+            const response = await request(app)
+                .delete(`/api/notes/${note._id}`)
+                .set('Authorization', `JWT ${author.generateJWT()}`);
 
-    test('[DELETE /api/notes/:id] удаление заметки', async () => {
-        const note = await new Note({ ...generateNote(), title: 'note_to_remove', owner: author._id }).save();
-
-        const response = await request(app)
-            .delete(`/api/notes/${note._id}`)
-            .set('Authorization', `JWT ${author.generateJWT()}`);
-
-        expect(response.statusCode).toBe(200);
-    });
-
-    test('[DELETE /api/notes/:id] нельзя удалить чужую', async () => {
-        const note = await new Note({ ...generateNote(), title: 'note_to_remove', owner: anotherAuthor._id }).save();
-
-        const response = await request(app)
-            .delete(`/api/notes/${note._id}`)
-            .set('Authorization', `JWT ${author.generateJWT()}`);
-
-        expect(response.statusCode).toBe(404);
+            expect(response.statusCode).toBe(404);
+        });
     });
 });
