@@ -14,12 +14,12 @@ export default router => {
     /**
      * Получить файла
      */
-    router.get('/files/:id', requireAuth, (req, res) => {});
+    router.get('/files/:file', requireAuth, (req, res) => {});
 
     /**
      * Изменение атрибутов файла
      */
-    router.patch('/files/:id', requireAuth, (req, res) => {});
+    router.patch('/files/:file', requireAuth, (req, res) => {});
 
     /**
      * Удаление файла

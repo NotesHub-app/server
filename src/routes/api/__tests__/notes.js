@@ -53,7 +53,7 @@ describe('notes', () => {
         });
     });
 
-    describe('[GET /api/notes/:id]', () => {
+    describe('[GET /api/notes/:note]', () => {
         test('получения заметки по неверному ID', async () => {
             const response = await request(app)
                 .get('/api/notes/WRONG_ID')
@@ -102,7 +102,7 @@ describe('notes', () => {
         });
     });
 
-    describe('[DELETE /api/notes/:id]', () => {
+    describe('[DELETE /api/notes/:note]', () => {
         test('удаление заметки', async () => {
             const note = await new Note({ ...generateNote(), title: 'note_to_remove', owner: author._id }).save();
 

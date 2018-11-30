@@ -2,7 +2,9 @@ import mongoose from 'mongoose';
 import uniqueValidator from 'mongoose-unique-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import dayjs from 'dayjs';
 import { secret } from '../config';
+import { randomString } from '../utils/string';
 
 const mongoSchema = new mongoose.Schema(
     {
@@ -18,7 +20,6 @@ const mongoSchema = new mongoose.Schema(
         registration: {
             verified: Boolean,
             code: String,
-            codeExpire: Date,
         },
         groups: [
             {
@@ -35,14 +36,14 @@ const mongoSchema = new mongoose.Schema(
                     type: String,
                     required: true,
                 },
-                expireDate: {
+                codeExpire: {
                     type: Date,
                     required: true,
                 },
             },
         ],
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 mongoSchema.plugin(uniqueValidator, { message: 'is already taken.' });
@@ -75,8 +76,17 @@ class UserClass {
                 id: this._id,
             },
             secret,
-            { expiresIn: 60 * 60 }
+            { expiresIn: 60 * 60 },
         );
+    }
+
+    generateRestorePasswordCode() {
+        const user = this;
+
+        user.restorePasswordCodes.push({
+            code: randomString(20),
+            codeExpire: dayjs().add(1, 'hour'),
+        });
     }
 
     toAuthJSON() {

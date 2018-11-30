@@ -1,5 +1,4 @@
 import { check, validationResult } from 'express-validator/check';
-import dayjs from 'dayjs';
 import User from '../../models/User';
 import { randomString } from '../../utils/string';
 import { checkValidation } from '../../middlewares/validation';
@@ -25,18 +24,19 @@ export default router => {
                 password,
                 registration: {
                     verified: false,
-                    code: randomString(10),
-                    codeExpire: dayjs().add(1, 'hour'),
+                    code: randomString(20),
                 },
             });
             await user.save();
 
-            if (process.env.NODE_ENV === 'production') {
+            if (process.env.NODE_ENV !== 'test') {
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 // TODO отправить емейл с кодом на емейл пользователя
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             }
 
             return res.json({ success: true });
-        },
+        }
     );
 
     /**
@@ -67,6 +67,6 @@ export default router => {
             await user.save();
 
             return res.json({ success: true });
-        },
+        }
     );
 };

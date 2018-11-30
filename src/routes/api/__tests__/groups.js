@@ -51,7 +51,7 @@ describe('groups', () => {
         });
     });
 
-    describe('[PATCH /api/groups/:id]', () => {
+    describe('[PATCH /api/groups/:group]', () => {
         test('обновление группы группы', async () => {
             // Нужный пользователь и нужная группа
             const group = await new Group({ title: 'group1' }).save();
@@ -80,7 +80,7 @@ describe('groups', () => {
         });
     });
 
-    describe('[DELETE /api/groups/:id]', () => {
+    describe('[DELETE /api/groups/:group]', () => {
         test('удалить группу', async () => {
             // Нужный пользователь и нужная группа
             const group = await new Group({ title: 'group1' }).save();
@@ -110,7 +110,7 @@ describe('groups', () => {
         });
     });
 
-    describe('[GET /groups/:id/invite]', () => {
+    describe('[GET /groups/:group/invite]', () => {
         beforeEach(async () => {
             await resetDB();
         });
@@ -156,7 +156,7 @@ describe('groups', () => {
         });
     });
 
-    describe('[POST /groups/:id/join]', () => {
+    describe('[POST /groups/:group/join]', () => {
         let group;
         let author;
         let anotherUser;

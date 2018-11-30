@@ -1,11 +1,29 @@
-import { check, param } from 'express-validator/check';
+import { check } from 'express-validator/check';
 import * as _ from 'lodash';
+import validator from 'validator';
 import { requireAuth } from '../../middlewares/auth';
 import Note from '../../models/Note';
-import { checkValidation } from '../../middlewares/validation';
+import { checkValidation, noteOwnerCheck } from '../../middlewares/validation';
 import { forbiddenResponse, notFoundResponse } from '../../utils/response';
 
 export default router => {
+    // Подгрузка Note по параметру роута
+    router.param('note', async (req, res, next, noteId) => {
+        if (!validator.isMongoId(noteId)) {
+            return notFoundResponse(res);
+        }
+
+        const note = await Note.findById(noteId);
+
+        if (!note) {
+            return notFoundResponse(res);
+        }
+
+        req.params.note = note;
+
+        return next();
+    });
+
     /**
      * получение дерева заметок
      */
@@ -19,34 +37,11 @@ export default router => {
     /**
      * получение конкретной заметки
      */
-    router.get(
-        '/notes/:id',
-        [
-            requireAuth,
+    router.get('/notes/:note', [requireAuth, noteOwnerCheck], async (req, res) => {
+        const { note } = req.params;
 
-            // Валидация параметров
-            param('id').isMongoId(),
-            checkValidation(404),
-        ],
-        async (req, res) => {
-            const noteId = req.params.id;
-
-            const note = await Note.findOne({
-                $and: [
-                    // ID заметки
-                    { _id: noteId },
-                    // Заметка принадлежит пользователю или группам в которых он состоит
-                    { $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] },
-                ],
-            });
-
-            if (!note) {
-                return notFoundResponse(res);
-            }
-
-            return res.status(200).json({ note: note.toViewJSON() });
-        },
-    );
+        return res.status(200).json({ note: note.toViewJSON() });
+    });
 
     /**
      * Создание заметки
@@ -87,20 +82,17 @@ export default router => {
             await newNote.save();
 
             res.status(201).json({ note: newNote.toViewJSON() });
-        },
+        }
     );
 
     /**
      * Обновление заметки
      */
     router.patch(
-        '/notes/:id',
+        '/notes/:note',
         [
             requireAuth,
-
-            // Валидация ID
-            param('id').isMongoId(),
-            checkValidation(404),
+            noteOwnerCheck,
 
             // Валидация параметров
             check('title')
@@ -118,19 +110,7 @@ export default router => {
             checkValidation(),
         ],
         async (req, res) => {
-            const noteId = req.params.id;
-
-            const note = await Note.findOne({
-                $and: [
-                    // ID заметки
-                    { _id: noteId },
-                    // Заметка принадлежит пользователю или группам в которых он состоит
-                    { $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] },
-                ],
-            });
-            if (!note) {
-                return notFoundResponse(res);
-            }
+            const { note } = req.params;
 
             if (!note.checkAllowToEdit(req.user)) {
                 return forbiddenResponse(res);
@@ -150,49 +130,27 @@ export default router => {
                     if (!_.isUndefined(value)) {
                         note[field] = value;
                     }
-                },
+                }
             );
 
             await note.save();
 
             return res.json({ success: true });
-        },
+        }
     );
 
     /**
      * Удаление заметки
      */
-    router.delete(
-        '/notes/:id',
-        [
-            requireAuth,
+    router.delete('/notes/:note', [requireAuth, noteOwnerCheck], async (req, res) => {
+        const { note } = req.params;
 
-            // Валидация ID
-            param('id').isMongoId(),
-            checkValidation(404),
-        ],
-        async (req, res) => {
-            const noteId = req.params.id;
+        if (!note.checkAllowToEdit(req.user)) {
+            return forbiddenResponse(res);
+        }
 
-            const note = await Note.findOne({
-                $and: [
-                    // ID заметки
-                    { _id: noteId },
-                    // Заметка принадлежит пользователю или группам в которых он состоит
-                    { $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] },
-                ],
-            });
-            if (!note) {
-                return notFoundResponse(res);
-            }
+        await note.remove();
 
-            if (!note.checkAllowToEdit(req.user)) {
-                return forbiddenResponse(res);
-            }
-
-            await note.remove();
-
-            return res.json({ success: true });
-        },
-    );
+        return res.json({ success: true });
+    });
 };
