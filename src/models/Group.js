@@ -42,7 +42,12 @@ class GroupClass {
         return user.groups.some(i => i.group._id.toString() === group._id.toString() && i.role === 0);
     }
 
-    async generateInviteCode({ user, role }) {
+    /**
+     * Сгенерировать инвайт-код
+     * @param user
+     * @param role
+     */
+    generateInviteCode({ user, role }) {
         const group = this;
         role = role || 2; // По умолчанию роль чтение и никогда админ
 
@@ -54,7 +59,6 @@ class GroupClass {
         };
 
         group.inviteCodes.push(codeObj);
-        await group.save();
 
         return codeObj;
     }

@@ -3,10 +3,7 @@ import Note from '../models/Note';
 import Group from '../models/Group';
 import { generateNote } from '../utils/fake';
 
-export default async function seed(mongooseConnectionPromise) {
-    // Удостоверяемся, что подключены к БД
-    await mongooseConnectionPromise;
-
+export default async function seed() {
     // Если нет пользователей
     if (!await User.countDocuments()) {
         // Создаем группу

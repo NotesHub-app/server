@@ -10,7 +10,8 @@ import { checkValidation } from '../../middlewares/validation';
 import Note from '../../models/Note';
 import File from '../../models/File';
 import { forbiddenResponse, notFoundResponse } from '../../utils/response';
-import mongooseConnectionPromise from '../../db';
+import mongooseConnectionPromise from '../../db'
+
 
 // Настройка multer аплоадера
 const upload = multer({
@@ -113,8 +114,12 @@ router.patch(
         allowToEditFile,
 
         // Валидация параметров
-        check('fileName').optional().isString(),
-        check('description').optional().isString(),
+        check('fileName')
+            .optional()
+            .isString(),
+        check('description')
+            .optional()
+            .isString(),
 
         checkValidation(),
     ],

@@ -138,7 +138,8 @@ router.get(
             return forbiddenResponse(res);
         }
 
-        const { author, ...codeObj } = await group.generateInviteCode({ user: req.user, role });
+        const { author, ...codeObj } = group.generateInviteCode({ user: req.user, role });
+        await group.save();
 
         return res.json({ ...codeObj, groupId: group._id.toString() });
     },
