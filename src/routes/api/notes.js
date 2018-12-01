@@ -4,7 +4,7 @@ import validator from 'validator';
 import express from 'express';
 import Note from '../../models/Note';
 import { checkValidation } from '../../middlewares/validation';
-import { forbiddenResponse, notFoundResponse } from '../../utils/response';
+import { forbiddenResponse, notFoundResponse, validationErrorResponse } from '../../utils/response';
 
 const router = express.Router();
 
@@ -40,6 +40,18 @@ router.param('note', async (req, res, next, noteId) => {
 });
 
 /**
+ * Middleware проверки, что пользователь может редактировать заметку
+ */
+const allowToEditNote = (req, res, next) => {
+    const { note } = req.params;
+    if (!note.checkAllowToEdit(req.user)) {
+        return forbiddenResponse(res);
+    }
+
+    return next();
+};
+
+/**
  * получение дерева заметок
  */
 router.get('/', async (req, res) => {
@@ -69,13 +81,32 @@ router.post(
         check('icon').isString(),
         check('iconColor').isString(),
         check('content').isString(),
+        check('parentId')
+            .optional()
+            .isMongoId(),
         check('groupId')
             .optional()
             .isMongoId(),
         checkValidation(),
     ],
     async (req, res) => {
-        const { title, icon, iconColor, content, groupId } = req.body;
+        const { title, icon, iconColor, content, groupId, parentId } = req.body;
+
+        // Если задана родительская заметка - проверяем что она имеет такого же владельца
+        if (parentId) {
+            const parentNote = await Note.findById(parentId);
+
+            if (
+                // Если роодиельской заметки вообще нет
+                !parentNote ||
+                // Или если она не групповая
+                (parentNote.group && parentNote.group._id.toString() !== groupId) ||
+                // Или если она не пользовательская
+                (parentNote.owner && parentNote.owner._id.toString() !== req.user._id.toString())
+            ) {
+                return validationErrorResponse(res);
+            }
+        }
 
         const newNote = new Note({
             title,
@@ -94,7 +125,7 @@ router.post(
 
         await newNote.save();
 
-        res.status(201).json({ note: newNote.toViewJSON() });
+        return res.status(201).json({ note: newNote.toViewJSON() });
     },
 );
 
@@ -104,6 +135,8 @@ router.post(
 router.patch(
     '/:note',
     [
+        allowToEditNote,
+
         // Валидация параметров
         check('title')
             .optional()
@@ -117,16 +150,37 @@ router.patch(
         check('content')
             .optional()
             .isString(),
+        check('parentId')
+            .optional()
+            .isMongoId(),
         checkValidation(),
     ],
     async (req, res) => {
         const { note } = req.params;
 
-        if (!note.checkAllowToEdit(req.user)) {
-            return forbiddenResponse(res);
-        }
+        const { title, icon, iconColor, content, parentId } = req.body;
 
-        const { title, icon, iconColor, content } = req.body;
+        // Если меняем родителя - должны быть уверены, что владельцы родителя такиеже
+        if (parentId) {
+            const parentNote = await Note.findById(parentId);
+
+            const prevParent = note.parent;
+            if (!prevParent) {
+                return validationErrorResponse(res);
+            }
+
+            if (
+                // Если роодиельской заметки вообще нет
+                !parentNote ||
+                // Или если она не групповая
+                (parentNote.group &&
+                    parentNote.group._id.toString() !== (prevParent.group && prevParent.group._id.toString())) ||
+                // Или если она не пользовательская
+                (parentNote.owner && parentNote.owner._id.toString() !== req.user._id.toString())
+            ) {
+                return validationErrorResponse(res);
+            }
+        }
 
         // Обновляем только те поля которые пришли с запросом
         _.forEach(
@@ -152,12 +206,8 @@ router.patch(
 /**
  * Удаление заметки
  */
-router.delete('/:note', async (req, res) => {
+router.delete('/:note', allowToEditNote, async (req, res) => {
     const { note } = req.params;
-
-    if (!note.checkAllowToEdit(req.user)) {
-        return forbiddenResponse(res);
-    }
 
     await note.remove();
 

@@ -9,7 +9,7 @@ const mongoSchema = new mongoose.Schema(
         description: {
             type: String,
         },
-        fsFileName: {
+        fsFileId: {
             type: String,
         },
         mimeType: {

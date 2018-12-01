@@ -39,6 +39,7 @@ const mongoSchema = new mongoose.Schema(
             keepHistory: true,
             set: previousKeeper('content'),
         },
+        parent: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Note' }],
         files: [{ type: mongoose.Schema.Types.ObjectId, ref: 'File' }],
         history: [
             {
@@ -121,6 +122,8 @@ class NoteClass {
             icon: this.icon,
             iconColor: this.iconColor,
             ownerId: this.owner,
+            groupIp: this.group,
+            parentId: this.parent,
         };
     }
 

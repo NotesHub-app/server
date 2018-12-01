@@ -5,11 +5,12 @@ import express from 'express';
 import multer from 'multer';
 import mongodb from 'mongodb';
 import GridFSStorage from 'multer-gridfs-storage';
+import mongoose from 'mongoose';
 import { checkValidation } from '../../middlewares/validation';
 import Note from '../../models/Note';
 import File from '../../models/File';
 import { forbiddenResponse, notFoundResponse } from '../../utils/response';
-import mongooseConnectionPromise from '../../db/db';
+import mongooseConnectionPromise from '../../db';
 
 // Настройка multer аплоадера
 const upload = multer({
@@ -47,9 +48,22 @@ router.param('file', async (req, res, next, fileId) => {
     }
 
     req.params.file = file;
+    req.params.fileNote = note;
 
     return next();
 });
+
+/**
+ * Middleware проверки, что пользователь может редактировать файл
+ */
+const allowToEditFile = (req, res, next) => {
+    const { fileNote: note } = req.params;
+    if (!note.checkAllowToEdit(req.user)) {
+        return forbiddenResponse(res);
+    }
+
+    return next();
+};
 
 /**
  * Создание записи о файле
@@ -96,9 +110,11 @@ router.post(
 router.patch(
     '/:file',
     [
+        allowToEditFile,
+
         // Валидация параметров
-        check('fileName').isString(),
-        check('description').isString(),
+        check('fileName').optional().isString(),
+        check('description').optional().isString(),
 
         checkValidation(),
     ],
@@ -128,11 +144,11 @@ router.patch(
 /**
  * Залить содержимое файла
  */
-router.post('/:file/upload', fileUpload, async (req, res) => {
+router.post('/:file/upload', [allowToEditFile, fileUpload], async (req, res) => {
     const { file } = req.params;
     const savedFile = req.file;
 
-    file.fsFileName = savedFile.filename;
+    file.fsFileId = savedFile.id;
     file.mimeType = savedFile.mimetype;
     file.size = savedFile.size;
     await file.save();
@@ -147,7 +163,7 @@ router.get('/:file/download', async (req, res) => {
     const { file } = req.params;
 
     // Если файл еще не закачали
-    if (!file.fsFileName) {
+    if (!file.fsFileId) {
         return notFoundResponse(res);
     }
 
@@ -155,12 +171,23 @@ router.get('/:file/download', async (req, res) => {
 
     res.setHeader('Content-type', file.mimeType);
     res.setHeader('Content-Disposition', `attachment; filename=${file.fileName}`);
-    return bucket.openDownloadStreamByName(file.fsFileName).pipe(res);
+    return bucket.openDownloadStream(mongoose.Types.ObjectId(file.fsFileId)).pipe(res);
 });
 
 /**
  * Удаление файла
  */
-router.delete('/files', (req, res) => {});
+router.delete('/:file', allowToEditFile, async (req, res) => {
+    const { file } = req.params;
+
+    if (file.fsFileId) {
+        const bucket = new mongodb.GridFSBucket((await mongooseConnectionPromise).connection.db);
+        await bucket.delete(mongoose.Types.ObjectId(file.fsFileId));
+    }
+
+    await file.remove();
+
+    return res.json({ success: true });
+});
 
 export default router;

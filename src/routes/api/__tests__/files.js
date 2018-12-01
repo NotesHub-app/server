@@ -46,10 +46,26 @@ describe('files', () => {
         });
     });
 
+    describe('[PATCH /api/files/:file]', () => {
+        test('правка полей файла', async () => {
+            const newDescription = 'NEW_DESCRIPTION';
+            const response = await request(app)
+                .patch(`/api/files/${file._id}`)
+                .send({ description: newDescription })
+                .set('Authorization', `JWT ${author.generateJWT()}`);
+
+            expect(response.statusCode).toBe(200);
+
+            file = await File.findById(file._id);
+
+            expect(file.description).toBe(newDescription);
+        });
+    });
+
     describe('[POST /api/files/:file/upload]', () => {
         test('загрузка файла', async () => {
-            const fsFileName = path.join(process.cwd(), 'src', 'test', 'fixtures', 'image.jpg');
-            const fsFileStat = fs.statSync(fsFileName);
+            const fsFileId = path.join(process.cwd(), 'src', 'test', 'fixtures', 'image.jpg');
+            const fsFileStat = fs.statSync(fsFileId);
 
             const response = await request(app)
                 .post(`/api/files/${file._id}/upload`)
@@ -76,9 +92,7 @@ describe('files', () => {
 
             expect(file.size).toBe(response.body.length);
         });
-    });
 
-    describe('[GET /api/files/:file/download]', () => {
         test('нельзя скачать чужой файл', async () => {
             const anotherFile = await new File({
                 fileName: 'file.jpg',
@@ -91,6 +105,33 @@ describe('files', () => {
                 .set('Authorization', `JWT ${author.generateJWT()}`);
 
             expect(response.statusCode).toBe(403);
+        });
+    });
+
+    describe('[DELETE /api/files/:file]', () => {
+        test('удалить файл', async () => {
+            const response = await request(app)
+                .delete(`/api/files/${file._id}`)
+                .set('Authorization', `JWT ${author.generateJWT()}`);
+
+            expect(response.statusCode).toBe(200);
+
+            expect(await File.findById(file._id)).toBe(null);
+        });
+
+        test('нельзя удалить чужой файл', async () => {
+            const anotherFile = await new File({
+                fileName: 'file.jpg',
+                description: 'my file',
+            }).save();
+
+            const response = await request(app)
+                .delete(`/api/files/${anotherFile._id}`)
+                .set('Authorization', `JWT ${author.generateJWT()}`);
+
+            expect(response.statusCode).toBe(403);
+
+            expect(await File.findById(anotherFile._id)).not.toBe(null);
         });
     });
 });
