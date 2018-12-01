@@ -2,14 +2,6 @@ import mongoose from 'mongoose';
 import Promise from 'bluebird';
 import dbSeed from './seed';
 
-const options = {
-    keepAlive: true,
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useFindAndModify: false,
-    promiseLibrary: Promise,
-};
-
 if (process.env.NODE_ENV !== 'test') {
     mongoose.connection
         .on('connecting', () => {
@@ -35,15 +27,22 @@ if (process.env.NODE_ENV !== 'test') {
         })
         .on('disconnected', () => {
             console.info('[DB] MongoDB disconnected!');
-
-            // Переподключаемся с задержкой
-            setTimeout(() => {
-                mongoose.connect(process.env.MONGO_URL, options);
-            }, 2000);
         });
 }
 
-const connectionPromise = mongoose.connect(process.env.MONGO_URL, options);
+const connectionPromise = mongoose.connect(process.env.MONGO_URL, {
+    promiseLibrary: Promise,
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+    reconnectTries: Number.MAX_VALUE,
+    reconnectInterval: 500,
+    poolSize: 10,
+    bufferMaxEntries: 0,
+    connectTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    family: 4,
+});
 
 // Показываем дебуггерскую инфу в консоль
 if (process.env.NODE_ENV === 'development') {
