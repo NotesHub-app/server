@@ -33,9 +33,6 @@ app.use(
 );
 app.use(bodyParser.json({ limit: '50mb' }));
 
-// TODO а нужно ли это в связке с JWT??
-app.use(session({ secret: 'conduit', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
-
 // Показываем дебуггерскую инфу в консоль
 if (process.env.NODE_ENV !== 'production') {
     app.use(errorHandler());
