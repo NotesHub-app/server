@@ -3,12 +3,11 @@ import bodyParser from 'body-parser';
 import session from 'express-session';
 import cors from 'cors';
 import errorHandler from 'errorhandler';
-import mongoose from 'mongoose';
 import morgan from 'morgan';
-import Promise from 'bluebird';
 import routes from './routes';
 
-// Инициализируем модели
+// Инициализируем подключение к БД и модели
+import './db';
 import './models';
 
 const app = express();
@@ -37,24 +36,9 @@ app.use(bodyParser.json({ limit: '50mb' }));
 // TODO а нужно ли это в связке с JWT??
 app.use(session({ secret: 'conduit', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
 
-// Инициализируем Mongoose
-mongoose.Promise = Promise;
-mongoose.connect(
-    process.env.MONGO_URL,
-    {
-        keepAlive: true,
-        reconnectTries: Number.MAX_VALUE,
-        reconnectInterval: 1000,
-        useNewUrlParser: true,
-        useCreateIndex: true,
-        useFindAndModify: false,
-    },
-);
-
 // Показываем дебуггерскую инфу в консоль
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV !== 'production') {
     app.use(errorHandler());
-    mongoose.set('debug', true);
 }
 
 // Подключаем роуты

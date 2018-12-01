@@ -2,10 +2,22 @@ import { check } from 'express-validator/check';
 import validator from 'validator';
 import * as _ from 'lodash';
 import express from 'express';
+import multer from 'multer';
+import mongodb from 'mongodb';
+import GridFSStorage from 'multer-gridfs-storage';
 import { checkValidation } from '../../middlewares/validation';
 import Note from '../../models/Note';
 import File from '../../models/File';
 import { forbiddenResponse, notFoundResponse } from '../../utils/response';
+import mongooseConnectionPromise from '../../db';
+
+// Настройка multer аплоадера
+const upload = multer({
+    storage: GridFSStorage({
+        db: mongooseConnectionPromise,
+    }),
+});
+const fileUpload = upload.single('file');
 
 const router = express.Router();
 
@@ -23,11 +35,11 @@ router.param('file', async (req, res, next, fileId) => {
     }
 
     // Проверка, что файл принадлежит к одной из зметок принадлежащих пользователю
-    const note = Note.findOne({
+    const note = await Note.findOne({
         $and: [
             // Заметка принадлежит пользователю или группам в которых он состоит
             { $or: [{ owner: user._id }, { group: { $in: user.groupIds } }] },
-            { files: { $elemMatch: file._id } },
+            { files: file._id },
         ],
     });
     if (!note) {
@@ -46,14 +58,14 @@ router.post(
     '/',
     [
         // Валидация параметров
-        check('name').isString(),
+        check('fileName').isString(),
         check('description').isString(),
         check('noteId').isMongoId(),
 
         checkValidation(),
     ],
     async (req, res) => {
-        const { noteId, name, description } = req.body;
+        const { noteId, fileName, description } = req.body;
 
         // Проверяем, что файл привязывают к своей заметке
         const note = Note.findOne({
@@ -69,12 +81,12 @@ router.post(
         }
 
         const file = new File({
-            name,
+            fileName,
             description,
         });
         file.save();
 
-        return res.status(201).json({ group: file.toIndexJSON() });
+        return res.status(201).json({ file: file.toIndexJSON() });
     },
 );
 
@@ -85,19 +97,19 @@ router.patch(
     '/:file',
     [
         // Валидация параметров
-        check('name').isString(),
+        check('fileName').isString(),
         check('description').isString(),
 
         checkValidation(),
     ],
     async (req, res) => {
         const { file } = req.params;
-        const { name, description } = req.body;
+        const { fileName, description } = req.body;
 
         // Обновляем только те поля которые пришли с запросом
         _.forEach(
             {
-                name,
+                fileName,
                 description,
             },
             (value, field) => {
@@ -116,16 +128,34 @@ router.patch(
 /**
  * Залить содержимое файла
  */
-router.post('/:file/upload', async (req, res) => {
+router.post('/:file/upload', fileUpload, async (req, res) => {
     const { file } = req.params;
+    const savedFile = req.file;
+
+    file.fsFileName = savedFile.filename;
+    file.mimeType = savedFile.mimetype;
+    file.size = savedFile.size;
+    await file.save();
+
+    return res.json({ success: true });
 });
 
 /**
  * Скачать содержмиое файла
  */
-router.get('/files/:file/download', (req, res) => {
+router.get('/:file/download', async (req, res) => {
     const { file } = req.params;
 
+    // Если файл еще не закачали
+    if (!file.fsFileName) {
+        return notFoundResponse(res);
+    }
+
+    const bucket = new mongodb.GridFSBucket((await mongooseConnectionPromise).connection.db);
+
+    res.setHeader('Content-type', file.mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename=${file.fileName}`);
+    return bucket.openDownloadStreamByName(file.fsFileName).pipe(res);
 });
 
 /**

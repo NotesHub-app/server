@@ -2,12 +2,21 @@ import mongoose from 'mongoose';
 
 const mongoSchema = new mongoose.Schema(
     {
-        name: {
+        fileName: {
             type: String,
             required: true,
         },
         description: {
             type: String,
+        },
+        fsFileName: {
+            type: String,
+        },
+        mimeType: {
+            type: String,
+        },
+        size: {
+            type: Number,
         },
     },
     { timestamps: true },
@@ -20,8 +29,10 @@ class FileClass {
     toIndexJSON() {
         return {
             id: this._id,
-            name: this.name,
+            fileName: this.fileName,
             description: this.description,
+            size: this.size,
+            mimeType: this.mimeType,
         };
     }
 }
