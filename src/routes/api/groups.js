@@ -2,190 +2,184 @@ import { check } from 'express-validator/check';
 import * as _ from 'lodash';
 import dayjs from 'dayjs';
 import validator from 'validator';
-import { requireAuth } from '../../middlewares/auth';
+import express from 'express';
 import { checkValidation } from '../../middlewares/validation';
 import Group from '../../models/Group';
 import { alreadyDoneResponse, forbiddenResponse, notFoundResponse } from '../../utils/response';
 
-export default router => {
-    // Подгрузка Group по параметру роута
-    router.param('group', async (req, res, next, groupId) => {
-        if (!validator.isMongoId(groupId)) {
-            return notFoundResponse(res);
-        }
+const router = express.Router();
 
-        const group = await Group.findById(groupId);
-        if (!group) {
-            return notFoundResponse(res);
-        }
+// Подгрузка Group по параметру роута
+router.param('group', async (req, res, next, groupId) => {
+    if (!validator.isMongoId(groupId)) {
+        return notFoundResponse(res);
+    }
 
-        req.params.group = group;
+    const group = await Group.findById(groupId);
+    if (!group) {
+        return notFoundResponse(res);
+    }
 
-        return next();
-    });
+    req.params.group = group;
 
-    /**
-     * получение списка своих групп
-     */
-    router.get('/groups', requireAuth, async (req, res) => {
-        // Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
-        const groups = await Group.find({ _id: { $in: req.user.groupIds } });
+    return next();
+});
 
-        res.status(200).json({ groups: groups.map(group => group.toIndexJSON(req.user)) });
-    });
+/**
+ * получение списка своих групп
+ */
+router.get('/', async (req, res) => {
+    // Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
+    const groups = await Group.find({ _id: { $in: req.user.groupIds } });
 
-    /**
-     * создание новой группы
-     */
-    router.post(
-        '/groups',
-        [
-            requireAuth,
+    res.status(200).json({ groups: groups.map(group => group.toIndexJSON(req.user)) });
+});
 
-            // Валидация параметров
-            check('title')
-                .isString()
-                .isLength({ min: 1 }),
-            checkValidation(),
-        ],
-        async (req, res) => {
-            const { title } = req.body;
+/**
+ * создание новой группы
+ */
+router.post(
+    '/',
+    [
+        // Валидация параметров
+        check('title')
+            .isString()
+            .isLength({ min: 1 }),
+        checkValidation(),
+    ],
+    async (req, res) => {
+        const { title } = req.body;
 
-            const newGroup = new Group({
-                title,
-            });
-            await newGroup.save();
+        const newGroup = new Group({
+            title,
+        });
+        await newGroup.save();
 
-            // При создании группы делаем создаля админом
-            req.user.groups.push({
-                group: newGroup,
-                role: 0,
-            });
-            await req.user.save();
+        // При создании группы делаем создаля админом
+        req.user.groups.push({
+            group: newGroup,
+            role: 0,
+        });
+        await req.user.save();
 
-            res.status(201).json({ group: newGroup.toIndexJSON(req.user) });
-        }
-    );
+        res.status(201).json({ group: newGroup.toIndexJSON(req.user) });
+    },
+);
 
-    /**
-     * обновление свойств группы
-     */
-    router.patch(
-        '/groups/:group',
-        [
-            requireAuth,
-
-            // Валидация параметров
-            check('title')
-                .isString()
-                .isLength({ min: 1 }),
-            checkValidation(),
-        ],
-        async (req, res) => {
-            const { group } = req.params;
-            const { title } = req.body;
-
-            if (!group.checkAllowToEdit(req.user)) {
-                return forbiddenResponse(res);
-            }
-
-            // Обновляем только те поля которые пришли с запросом
-            _.forEach(
-                {
-                    title,
-                },
-                (value, field) => {
-                    if (!_.isUndefined(value)) {
-                        group[field] = value;
-                    }
-                }
-            );
-
-            await group.save();
-
-            return res.json({ success: true });
-        }
-    );
-
-    /**
-     * удаление группы со всем содержимым
-     */
-    router.delete('/groups/:group', [requireAuth], async (req, res) => {
+/**
+ * обновление свойств группы
+ */
+router.patch(
+    '/:group',
+    [
+        // Валидация параметров
+        check('title')
+            .isString()
+            .isLength({ min: 1 }),
+        checkValidation(),
+    ],
+    async (req, res) => {
         const { group } = req.params;
+        const { title } = req.body;
 
         if (!group.checkAllowToEdit(req.user)) {
             return forbiddenResponse(res);
         }
 
-        await group.remove();
+        // Обновляем только те поля которые пришли с запросом
+        _.forEach(
+            {
+                title,
+            },
+            (value, field) => {
+                if (!_.isUndefined(value)) {
+                    group[field] = value;
+                }
+            },
+        );
+
+        await group.save();
 
         return res.json({ success: true });
-    });
+    },
+);
 
-    /**
-     * получение инвайт-ссылки для группы
-     */
-    router.get(
-        '/groups/:group/invite',
-        [
-            requireAuth,
+/**
+ * удаление группы со всем содержимым
+ */
+router.delete('/:group', async (req, res) => {
+    const { group } = req.params;
 
-            // Валидация параметров
-            check('role').isInt({ gt: 0, lt: 3 }),
-            checkValidation(),
-        ],
-        async (req, res) => {
-            const { group } = req.params;
-            const { role } = req.body;
+    if (!group.checkAllowToEdit(req.user)) {
+        return forbiddenResponse(res);
+    }
 
-            // Пользователь должен быть админом
-            if (!req.user.groups.some(i => i.group._id.toString() === group._id.toString() && i.role === 0)) {
-                return forbiddenResponse(res);
-            }
+    await group.remove();
 
-            const { author, ...codeObj } = await group.generateInviteCode({ user: req.user, role });
+    return res.json({ success: true });
+});
 
-            return res.json({ ...codeObj, groupId: group._id.toString() });
+/**
+ * получение инвайт-ссылки для группы
+ */
+router.get(
+    '/:group/invite',
+    [
+        // Валидация параметров
+        check('role').isInt({ gt: 0, lt: 3 }),
+        checkValidation(),
+    ],
+    async (req, res) => {
+        const { group } = req.params;
+        const { role } = req.body;
+
+        // Пользователь должен быть админом
+        if (!req.user.groups.some(i => i.group._id.toString() === group._id.toString() && i.role === 0)) {
+            return forbiddenResponse(res);
         }
-    );
 
-    /**
-     * Добавиться в группу
-     */
-    router.post(
-        '/groups/:group/join',
-        [
-            requireAuth,
+        const { author, ...codeObj } = await group.generateInviteCode({ user: req.user, role });
 
-            // Валидация параметров
-            check('code').isString(),
-            checkValidation(),
-        ],
-        async (req, res) => {
-            const { group } = req.params;
-            const { code } = req.body;
+        return res.json({ ...codeObj, groupId: group._id.toString() });
+    },
+);
 
-            const inviteCode = group.inviteCodes.find(
-                i =>
-                    // Код совпадает
-                    i.code === code &&
-                    // Код всё еще не просрочен
-                    dayjs().isBefore(dayjs(i.expireDate))
-            );
-            if (!inviteCode) {
-                return forbiddenResponse(res);
-            }
+/**
+ * Добавиться в группу
+ */
+router.post(
+    '/:group/join',
+    [
+        // Валидация параметров
+        check('code').isString(),
+        checkValidation(),
+    ],
+    async (req, res) => {
+        const { group } = req.params;
+        const { code } = req.body;
 
-            // Пользователь не должен быть уже в группе
-            if (req.user.groupIds.includes(group._id.toString())) {
-                return alreadyDoneResponse(res);
-            }
-
-            // Выставляем пользователю группу с правами инвайт-ссылки
-            req.user.groups.push({ group, role: inviteCode.role });
-            await req.user.save();
-
-            return res.json({ success: true });
+        const inviteCode = group.inviteCodes.find(
+            i =>
+                // Код совпадает
+                i.code === code &&
+                // Код всё еще не просрочен
+                dayjs().isBefore(dayjs(i.expireDate)),
+        );
+        if (!inviteCode) {
+            return forbiddenResponse(res);
         }
-    );
-};
+
+        // Пользователь не должен быть уже в группе
+        if (req.user.groupIds.includes(group._id.toString())) {
+            return alreadyDoneResponse(res);
+        }
+
+        // Выставляем пользователю группу с правами инвайт-ссылки
+        req.user.groups.push({ group, role: inviteCode.role });
+        await req.user.save();
+
+        return res.json({ success: true });
+    },
+);
+
+export default router;

@@ -1,156 +1,167 @@
 import { check } from 'express-validator/check';
 import * as _ from 'lodash';
 import validator from 'validator';
-import { requireAuth } from '../../middlewares/auth';
+import express from 'express';
 import Note from '../../models/Note';
-import { checkValidation, noteOwnerCheck } from '../../middlewares/validation';
+import { checkValidation } from '../../middlewares/validation';
 import { forbiddenResponse, notFoundResponse } from '../../utils/response';
 
-export default router => {
-    // Подгрузка Note по параметру роута
-    router.param('note', async (req, res, next, noteId) => {
-        if (!validator.isMongoId(noteId)) {
-            return notFoundResponse(res);
-        }
+const router = express.Router();
 
-        const note = await Note.findById(noteId);
+// Подгрузка Note по параметру роута
+router.param('note', async (req, res, next, noteId) => {
+    if (!validator.isMongoId(noteId)) {
+        return notFoundResponse(res);
+    }
 
-        if (!note) {
-            return notFoundResponse(res);
-        }
+    const { user } = req;
 
-        req.params.note = note;
-
-        return next();
-    });
-
-    /**
-     * получение дерева заметок
-     */
-    router.get('/notes', requireAuth, async (req, res) => {
-        // Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
-        const notes = await Note.find({ $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] });
-
-        res.status(200).json({ notes: notes.map(note => note.toIndexJSON()) });
-    });
-
-    /**
-     * получение конкретной заметки
-     */
-    router.get('/notes/:note', [requireAuth, noteOwnerCheck], async (req, res) => {
-        const { note } = req.params;
-
-        return res.status(200).json({ note: note.toViewJSON() });
-    });
-
-    /**
-     * Создание заметки
-     */
-    router.post(
-        '/notes',
-        [
-            requireAuth,
-
-            // Валидация параметров
-            check('title').isString(),
-            check('icon').isString(),
-            check('iconColor').isString(),
-            check('content').isString(),
-            check('groupId')
-                .optional()
-                .isMongoId(),
-            checkValidation(),
+    const note = await Note.findOne({
+        $and: [
+            { _id: noteId },
+            {
+                $or: [
+                    // Владельцем должен быть пользователь
+                    { owner: user },
+                    // Или группа в которой он состоит
+                    { group: { $in: user.groupIds } },
+                ],
+            },
         ],
-        async (req, res) => {
-            const { title, icon, iconColor, content, groupId } = req.body;
+    });
 
-            const newNote = new Note({
-                title,
-                icon,
-                iconColor,
-                content,
-            });
+    if (!note) {
+        return notFoundResponse(res);
+    }
 
-            if (groupId) {
-                // Если была указана группа - сохраняем как групповую заметку
-                newNote.group = groupId;
-            } else {
-                // Иначе указываем владельцем пользователя
-                newNote.owner = req.user._id;
-            }
+    req.params.note = note;
 
-            await newNote.save();
+    return next();
+});
 
-            res.status(201).json({ note: newNote.toViewJSON() });
+/**
+ * получение дерева заметок
+ */
+router.get('/', async (req, res) => {
+    // Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
+    const notes = await Note.find({ $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] });
+
+    res.status(200).json({ notes: notes.map(note => note.toIndexJSON()) });
+});
+
+/**
+ * получение конкретной заметки
+ */
+router.get('/:note', async (req, res) => {
+    const { note } = req.params;
+
+    return res.status(200).json({ note: note.toViewJSON() });
+});
+
+/**
+ * Создание заметки
+ */
+router.post(
+    '/',
+    [
+        // Валидация параметров
+        check('title').isString(),
+        check('icon').isString(),
+        check('iconColor').isString(),
+        check('content').isString(),
+        check('groupId')
+            .optional()
+            .isMongoId(),
+        checkValidation(),
+    ],
+    async (req, res) => {
+        const { title, icon, iconColor, content, groupId } = req.body;
+
+        const newNote = new Note({
+            title,
+            icon,
+            iconColor,
+            content,
+        });
+
+        if (groupId) {
+            // Если была указана группа - сохраняем как групповую заметку
+            newNote.group = groupId;
+        } else {
+            // Иначе указываем владельцем пользователя
+            newNote.owner = req.user._id;
         }
-    );
 
-    /**
-     * Обновление заметки
-     */
-    router.patch(
-        '/notes/:note',
-        [
-            requireAuth,
-            noteOwnerCheck,
+        await newNote.save();
 
-            // Валидация параметров
-            check('title')
-                .optional()
-                .isString(),
-            check('icon')
-                .optional()
-                .isString(),
-            check('iconColor')
-                .optional()
-                .isString(),
-            check('content')
-                .optional()
-                .isString(),
-            checkValidation(),
-        ],
-        async (req, res) => {
-            const { note } = req.params;
+        res.status(201).json({ note: newNote.toViewJSON() });
+    },
+);
 
-            if (!note.checkAllowToEdit(req.user)) {
-                return forbiddenResponse(res);
-            }
-
-            const { title, icon, iconColor, content } = req.body;
-
-            // Обновляем только те поля которые пришли с запросом
-            _.forEach(
-                {
-                    title,
-                    icon,
-                    iconColor,
-                    content,
-                },
-                (value, field) => {
-                    if (!_.isUndefined(value)) {
-                        note[field] = value;
-                    }
-                }
-            );
-
-            await note.save();
-
-            return res.json({ success: true });
-        }
-    );
-
-    /**
-     * Удаление заметки
-     */
-    router.delete('/notes/:note', [requireAuth, noteOwnerCheck], async (req, res) => {
+/**
+ * Обновление заметки
+ */
+router.patch(
+    '/:note',
+    [
+        // Валидация параметров
+        check('title')
+            .optional()
+            .isString(),
+        check('icon')
+            .optional()
+            .isString(),
+        check('iconColor')
+            .optional()
+            .isString(),
+        check('content')
+            .optional()
+            .isString(),
+        checkValidation(),
+    ],
+    async (req, res) => {
         const { note } = req.params;
 
         if (!note.checkAllowToEdit(req.user)) {
             return forbiddenResponse(res);
         }
 
-        await note.remove();
+        const { title, icon, iconColor, content } = req.body;
+
+        // Обновляем только те поля которые пришли с запросом
+        _.forEach(
+            {
+                title,
+                icon,
+                iconColor,
+                content,
+            },
+            (value, field) => {
+                if (!_.isUndefined(value)) {
+                    note[field] = value;
+                }
+            },
+        );
+
+        await note.save();
 
         return res.json({ success: true });
-    });
-};
+    },
+);
+
+/**
+ * Удаление заметки
+ */
+router.delete('/:note', async (req, res) => {
+    const { note } = req.params;
+
+    if (!note.checkAllowToEdit(req.user)) {
+        return forbiddenResponse(res);
+    }
+
+    await note.remove();
+
+    return res.json({ success: true });
+});
+
+export default router;

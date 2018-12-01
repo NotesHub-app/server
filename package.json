@@ -8,6 +8,7 @@
         "start": "better-npm-run start-prod",
         "test": "better-npm-run test",
         "prettier": "prettier-eslint --write \"**/*.{js,json,css}\"",
+        "lint": "eslint.cmd src/**/*.js",
         "test:watch": "npm run test -- --watch --onlyChanged"
     },
     "betterScripts": {

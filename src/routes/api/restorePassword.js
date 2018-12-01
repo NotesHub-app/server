@@ -1,73 +1,76 @@
 import { check } from 'express-validator/check';
+import express from 'express';
 import { checkValidation } from '../../middlewares/validation';
 import User from '../../models/User';
 import { notFoundResponse } from '../../utils/response';
 
-export default router => {
-    /**
-     * восстановление пароля (в теле указываем email)
-     */
-    router.post(
-        '/restorePassword',
-        [
-            // Валидация параметров
-            check('email').isEmail(),
-            checkValidation(),
-        ],
-        async (req, res) => {
-            const { email } = req.body;
+const router = express.Router();
 
-            const user = await User.findOne({ email });
+/**
+ * восстановление пароля (в теле указываем email)
+ */
+router.post(
+    '/',
+    [
+        // Валидация параметров
+        check('email').isEmail(),
+        checkValidation(),
+    ],
+    async (req, res) => {
+        const { email } = req.body;
 
-            if (!user) {
-                // В данном запросе нужно всё равно отдавать успешный ответ,
-                // чтоб не смогли набрутить базу зарегистрированных емейлов
-                return res.json({ success: true });
-            }
+        const user = await User.findOne({ email });
 
-            user.generateRestorePasswordCode();
-            await user.save();
-
-            if (process.env.NODE_ENV !== 'test') {
-                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                // TODO отпавить код на email пользователя
-                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            }
-
+        if (!user) {
+            // В данном запросе нужно всё равно отдавать успешный ответ,
+            // чтоб не смогли набрутить базу зарегистрированных емейлов
             return res.json({ success: true });
         }
-    );
 
-    /**
-     * восстановление пароля (в теле код из письма и новый пароль пользователя)
-     */
-    router.post(
-        '/restorePassword/confirm',
-        [
-            // Валидация параметров
-            check('code').isString(),
-            check('password').isLength({ min: 8 }),
-            checkValidation(),
-        ],
-        async (req, res) => {
-            const { code, password } = req.body;
+        user.generateRestorePasswordCode();
+        await user.save();
 
-            const user = await User.findOne({
-                restorePasswordCodes: {
-                    $elemMatch: {
-                        $and: [{ code }, { codeExpire: { $gt: new Date() } }],
-                    },
+        if (process.env.NODE_ENV !== 'test') {
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // TODO отпавить код на email пользователя
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        }
+
+        return res.json({ success: true });
+    },
+);
+
+/**
+ * восстановление пароля (в теле код из письма и новый пароль пользователя)
+ */
+router.post(
+    '/confirm',
+    [
+        // Валидация параметров
+        check('code').isString(),
+        check('password').isLength({ min: 8 }),
+        checkValidation(),
+    ],
+    async (req, res) => {
+        const { code, password } = req.body;
+
+        const user = await User.findOne({
+            restorePasswordCodes: {
+                $elemMatch: {
+                    $and: [{ code }, { codeExpire: { $gt: new Date() } }],
                 },
-            });
+            },
+        });
 
-            if (!user) {
-                return notFoundResponse(res);
-            }
-
-            user.password = password;
-            await user.save();
-
-            return res.json({ success: true });
+        if (!user) {
+            return notFoundResponse(res);
         }
-    );
-};
+
+        user.password = password;
+        await user.save();
+
+        return res.json({ success: true });
+    },
+);
+
+export default router;

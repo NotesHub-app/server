@@ -17,25 +17,3 @@ export const checkValidation = (code = 422) => (req, res, next) => {
     }
     return next();
 };
-
-/**
- * Проверка владельца заметки
- * @param req
- * @param res
- * @param next
- */
-export const noteOwnerCheck = (req, res, next) => {
-    const { note } = req.params;
-    const { user } = req;
-
-    if (
-        // Владельцем должен быть пользователь
-        (note.owner && note.owner._id.toString() === user._id.toString()) ||
-        // Или группа в которой он состоит
-        (note.group && req.user.groupIds.includes(note.group._id.toString()))
-    ) {
-        return next();
-    }
-
-    return notFoundResponse(res);
-};

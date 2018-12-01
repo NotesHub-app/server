@@ -24,6 +24,7 @@ if (process.env.NODE_ENV !== 'test') {
     app.use(morgan('dev'));
 }
 
+// Настраиваем парсилку входящих данных
 app.use(
     bodyParser.urlencoded({
         limit: '50mb',
@@ -33,8 +34,10 @@ app.use(
 );
 app.use(bodyParser.json({ limit: '50mb' }));
 
+// TODO а нужно ли это в связке с JWT??
 app.use(session({ secret: 'conduit', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
 
+// Инициализируем Mongoose
 mongoose.Promise = Promise;
 mongoose.connect(
     process.env.MONGO_URL,
@@ -48,6 +51,7 @@ mongoose.connect(
     },
 );
 
+// Показываем дебуггерскую инфу в консоль
 if (process.env.NODE_ENV === 'development') {
     app.use(errorHandler());
     mongoose.set('debug', true);

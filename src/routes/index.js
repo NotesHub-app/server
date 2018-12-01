@@ -1,24 +1,25 @@
 import express from 'express';
 import '../config/passport';
-import authApiRoutes from './api/auth';
-import filesApiRoutes from './api/files';
-import groupsApiRoutes from './api/groups';
-import notesApiRoutes from './api/notes';
-import registrationApiRoutes from './api/registration';
-import restorePasswordApiRoutes from './api/restorePassword';
-import usersApiRoutes from './api/users';
+import authApiRouter from './api/auth';
+import filesApiRouter from './api/files';
+import groupsApiRouter from './api/groups';
+import notesApiRouter from './api/notes';
+import registrationApiRouter from './api/registration';
+import restorePasswordApiRouter from './api/restorePassword';
+import usersApiRouter from './api/users';
+import { requireAuth } from '../middlewares/auth';
 
 export default app => {
     // Инициализируем API роуты
     const apiRouter = express.Router();
 
-    authApiRoutes(apiRouter);
-    filesApiRoutes(apiRouter);
-    groupsApiRoutes(apiRouter);
-    notesApiRoutes(apiRouter);
-    registrationApiRoutes(apiRouter);
-    restorePasswordApiRoutes(apiRouter);
-    usersApiRoutes(apiRouter);
+    apiRouter.use('/auth', [], authApiRouter);
+    apiRouter.use('/registration', [], registrationApiRouter);
+    apiRouter.use('/restorePassword', [], restorePasswordApiRouter);
+    apiRouter.use('/notes', [requireAuth], notesApiRouter);
+    apiRouter.use('/files', [requireAuth], filesApiRouter);
+    apiRouter.use('/groups', [requireAuth], groupsApiRouter);
+    apiRouter.use('/users', [requireAuth], usersApiRouter);
 
     app.use('/api', apiRouter);
 
