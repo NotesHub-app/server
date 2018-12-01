@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
 import Promise from 'bluebird';
+import dbSeed from './seed';
 
 // Инициализируем Mongoose
 mongoose.Promise = Promise;
-const mongooseConnection = mongoose.connect(process.env.MONGO_URL, {
+const mongooseConnectionPromise = mongoose.connect(process.env.MONGO_URL, {
     keepAlive: true,
     reconnectTries: Number.MAX_VALUE,
     reconnectInterval: 1000,
@@ -15,6 +16,8 @@ const mongooseConnection = mongoose.connect(process.env.MONGO_URL, {
 // Показываем дебуггерскую инфу в консоль
 if (process.env.NODE_ENV === 'development') {
     mongoose.set('debug', true);
+
+    dbSeed(mongooseConnectionPromise);
 }
 
-export default mongooseConnection;
+export default mongooseConnectionPromise;

@@ -1,6 +1,5 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import session from 'express-session';
 import cors from 'cors';
 import errorHandler from 'errorhandler';
 import morgan from 'morgan';

@@ -9,7 +9,7 @@ import { checkValidation } from '../../middlewares/validation';
 import Note from '../../models/Note';
 import File from '../../models/File';
 import { forbiddenResponse, notFoundResponse } from '../../utils/response';
-import mongooseConnectionPromise from '../../db';
+import mongooseConnectionPromise from '../../db/db';
 
 // Настройка multer аплоадера
 const upload = multer({
