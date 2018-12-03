@@ -1,13 +1,34 @@
+import * as _ from 'lodash';
 import User from '../models/User';
 import Note from '../models/Note';
 import Group from '../models/Group';
 import { generateNote } from '../utils/fake';
 import { resetDB } from '../utils/db';
 
+let nonceValue = 0;
+const getNonce = () => {
+    nonceValue += 1;
+    return nonceValue;
+};
+
+async function makeNotes({ parent, group, owner, deepness = 0 }) {
+    if (deepness < 3) {
+        // eslint-disable-next-line no-unused-vars
+        for (const idx of _.range(1, 5)) {
+            const note = await new Note({
+                ...generateNote(getNonce()),
+                owner,
+                group,
+                parent,
+            }).save();
+            await makeNotes({ parent: note, owner, group, deepness: deepness + 1 });
+        }
+    }
+}
+
 export default async function seed() {
     // Если нет пользователей
-    if (!await User.countDocuments()) {
-
+    if (!(await User.countDocuments())) {
         await resetDB();
 
         // Создаем группу
@@ -20,22 +41,11 @@ export default async function seed() {
             email: 'admin@email.com',
             password: 'password',
             registration: { verified: true },
-            groups: [{group, role: 0}],
+            groups: [{ group, role: 0 }],
         }).save();
 
-        // Персональную заметку
-        await new Note({
-            ...generateNote(),
-            title: 'Personal note1',
-            owner: user,
-        }).save();
-
-        // Заметку группы
-        await new Note({
-            ...generateNote(),
-            title: 'Group note1',
-            group,
-        }).save();
+        await makeNotes({ owner: user });
+        await makeNotes({ group });
 
         console.info('DB seeded');
     } else {

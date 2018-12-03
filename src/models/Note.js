@@ -39,7 +39,7 @@ const mongoSchema = new mongoose.Schema(
             keepHistory: true,
             set: previousKeeper('content'),
         },
-        parent: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Note' }],
+        parent: { type: mongoose.Schema.Types.ObjectId, ref: 'Note' },
         files: [{ type: mongoose.Schema.Types.ObjectId, ref: 'File' }],
         history: [
             {
@@ -56,7 +56,7 @@ const mongoSchema = new mongoose.Schema(
         owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' },
     },
-    { timestamps: true },
+    { timestamps: true }
 );
 
 class NoteClass {
@@ -122,7 +122,7 @@ class NoteClass {
             icon: this.icon,
             iconColor: this.iconColor,
             ownerId: this.owner,
-            groupIp: this.group,
+            groupId: this.group,
             parentId: this.parent,
         };
     }
@@ -130,11 +130,7 @@ class NoteClass {
     /** Вывод для отображения заметки с содержимым */
     toViewJSON() {
         return {
-            id: this._id,
-            title: this.title,
-            icon: this.icon,
-            iconColor: this.iconColor,
-            ownerId: this.owner,
+            ...this.toIndexJSON(),
             content: this.content,
         };
     }
