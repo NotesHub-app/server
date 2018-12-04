@@ -102,7 +102,7 @@ class NoteClass {
     checkAllowToEdit(user) {
         const note = this;
         if (note.group) {
-            const userGroup = user.groups.find(i => i._id.toString() === note.group._id.toString());
+            const userGroup = user.groups.find(i => i.group._id.toString() === note.group._id.toString());
             if (userGroup.role > 1) {
                 return false;
             }
