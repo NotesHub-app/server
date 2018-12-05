@@ -1,5 +1,6 @@
 import { check } from 'express-validator/check';
 import express from 'express';
+import * as _ from 'lodash';
 import { checkValidation } from '../../middlewares/validation';
 import User from '../../models/User';
 import { notFoundResponse } from '../../utils/response';
@@ -30,7 +31,11 @@ router.post(
         user.generateRestorePasswordCode();
         await user.save();
 
-        if (process.env.NODE_ENV !== 'test') {
+        if (process.env.NODE_ENV === 'development') {
+            const {code} = _.last(user.restorePasswordCodes);
+            console.info(`:::: RESTORE PASSWORD CODE FOR ${user.email}:    ${code}`);
+        }
+        if (process.env.NODE_ENV === 'production') {
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // TODO отпавить код на email пользователя
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
