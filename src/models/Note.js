@@ -90,6 +90,28 @@ class NoteClass {
         }
     }
 
+    static async getChildrenIdsOf(note) {
+        const result = await this.aggregate([
+            {
+                $graphLookup: {
+                    from: 'notes',
+                    startWith: note._id,
+                    connectFromField: '_id',
+                    connectToField: 'parent',
+                    as: 'children',
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    children: 1,
+                },
+            },
+        ]);
+
+        return result[0].children.map(item => item._id);
+    }
+
     /**
      * Проверка возможности делать правки/удаление
      * @param user

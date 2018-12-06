@@ -226,7 +226,10 @@ router.patch(
 router.delete('/:note', allowToEditNote, async (req, res) => {
     const { note } = req.params;
 
-    await note.remove();
+    const idsToRemove = await Note.getChildrenIdsOf(note);
+    idsToRemove.push(note._id);
+
+    await Note.remove({ _id: { $in: idsToRemove } });
 
     return res.json({ success: true });
 });

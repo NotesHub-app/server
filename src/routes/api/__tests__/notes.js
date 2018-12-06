@@ -143,12 +143,24 @@ describe('notes', () => {
     describe('[DELETE /api/notes/:note]', () => {
         test('удаление заметки', async () => {
             const note = await new Note({ ...generateNote(), title: 'note_to_remove', owner: author._id }).save();
+            const subNote = await new Note({
+                ...generateNote(),
+                title: 'sub_note',
+                owner: author._id,
+                parent: note,
+            }).save();
+
+            const anotherNote = await new Note({ ...generateNote(), title: 'another_note', owner: author._id }).save();
 
             const response = await request(app)
                 .delete(`/api/notes/${note._id}`)
                 .set('Authorization', `JWT ${author.generateJWT()}`);
 
             expect(response.statusCode).toBe(200);
+
+            expect(await Note.findById(note.id)).toBe(null);
+            expect(await Note.findById(subNote.id)).toBe(null);
+            expect(await Note.findById(anotherNote.id)).not.toBe(null);
         });
 
         test('нельзя удалить чужую', async () => {

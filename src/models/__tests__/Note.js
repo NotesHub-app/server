@@ -4,7 +4,7 @@ import User from '../User';
 import { generateNote } from '../../utils/fake';
 
 describe('NoteModel', () => {
-    afterAll(async () => {
+    afterEach(async () => {
         await resetDB();
     });
 
@@ -30,5 +30,24 @@ describe('NoteModel', () => {
         expect(note.history[0].changes).toHaveLength(1);
         expect(note.history[0].changes[0].field).toBe('content');
         expect(note.history[0].changes[0].diff).not.toBeUndefined();
+    });
+
+    test('getChildrenIdsOf method', async () => {
+        // Создаем пользователя который будет делать правки
+        const author = await new User({ email: 'user@mail.com' }).save();
+
+        // Создаем связанные заметки
+        const note1 = await new Note({ ...generateNote(), title: 'note1', owner: author }).save();
+        const note2 = await new Note({ ...generateNote(), title: 'note2', owner: author, parent: note1 }).save();
+        const note3 = await new Note({ ...generateNote(), owner: author, title: 'note3', parent: note2 }).save();
+        await new Note({ ...generateNote(), owner: author, title: 'note4', parent: note3 }).save();
+
+        // Создаем отдельно стоящую заметку
+        await new Note({ ...generateNote(), title: 'note4_SEP', owner: author }).save();
+
+        const childrenIds = await Note.getChildrenIdsOf(note1);
+
+        // Должно остаться только одна заметка
+        expect(childrenIds).toHaveLength(3);
     });
 });

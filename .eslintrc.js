@@ -50,5 +50,6 @@ module.exports = {
         'no-restricted-syntax': ['error', 'ForInStatement'],
         'sonarjs/no-duplicate-string': 'off',
         'no-param-reassign': 'off',
+        'no-return-await': 'off',
     },
 };
