@@ -100,6 +100,44 @@ describe('notes', () => {
             expect(response.body.note.title).toBe(newNote.title);
             expect(response.body.note.content).toBe(newNote.content);
         });
+
+        test('[POST /api/notes] создание заметки с указаниаем родителя', async () => {
+            const parentNote = await new Note({ ...generateNote(), owner: author._id }).save();
+            const newNote = {
+                ...generateNote(),
+                parentId: parentNote._id.toString(),
+            };
+            const response = await request(app)
+                .post(`/api/notes`)
+                .send(newNote)
+                .set('Authorization', `JWT ${author.generateJWT()}`);
+
+            expect(response.statusCode).toBe(201);
+
+            expect(response.body.note.title).toBe(newNote.title);
+            expect(response.body.note.content).toBe(newNote.content);
+            expect(response.body.note.parentId).toBe(newNote.parentId);
+        });
+
+        test('[POST /api/notes] создание групповой заметки с указаниаем родителя без указания группы', async () => {
+            const parentNote = await new Note({ ...generateNote(), group }).save();
+            const newNote = {
+                ...generateNote(),
+                parentId: parentNote._id.toString(),
+            };
+            const response = await request(app)
+                .post(`/api/notes`)
+                .send(newNote)
+                .set('Authorization', `JWT ${author.generateJWT()}`);
+
+            expect(response.statusCode).toBe(201);
+
+            expect(response.body.note.title).toBe(newNote.title);
+            expect(response.body.note.content).toBe(newNote.content);
+            expect(response.body.note.parentId).toBe(newNote.parentId);
+            // Группа всё равно должна быть, даже если мы её не указали (берется от родителя)
+            expect(response.body.note.groupId).toBe(group._id.toString());
+        });
     });
 
     describe('[DELETE /api/notes/:note]', () => {

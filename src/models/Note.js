@@ -17,25 +17,21 @@ const mongoSchema = new mongoose.Schema(
     {
         title: {
             type: String,
-            required: true,
             keepHistory: true,
             set: previousKeeper('title'),
         },
         icon: {
             type: String,
-            required: true,
             keepHistory: true,
             set: previousKeeper('icon'),
         },
         iconColor: {
             type: String,
-            required: true,
             keepHistory: true,
             set: previousKeeper('iconColor'),
         },
         content: {
             type: String,
-            required: true,
             keepHistory: true,
             set: previousKeeper('content'),
         },

@@ -2,6 +2,7 @@ import { check } from 'express-validator/check';
 import * as _ from 'lodash';
 import validator from 'validator';
 import express from 'express';
+import mongoose from 'mongoose';
 import Note from '../../models/Note';
 import { checkValidation } from '../../middlewares/validation';
 import { forbiddenResponse, notFoundResponse, validationErrorResponse } from '../../utils/response';
@@ -90,25 +91,41 @@ router.post(
         checkValidation(),
     ],
     async (req, res) => {
-        const { title, icon, iconColor, content, groupId, parentId } = req.body;
+        const { user } = req;
+        const { title, icon, iconColor, content, parentId } = req.body;
+        let { groupId } = req.body;
 
-        // Если задана родительская заметка - проверяем что она имеет такого же владельца
+        // Если задана родительская заметка
         if (parentId) {
-            const parentNote = await Note.findById(parentId);
+            const parentNote = await await Note.findOne({
+                $and: [
+                    { _id: parentId },
+                    {
+                        $or: [
+                            // Владельцем должен быть пользователь
+                            { owner: user },
+                            // Или группа в которой он состоит
+                            { group: { $in: user.groupIds } },
+                        ],
+                    },
+                ],
+            });
 
             if (
                 // Если роодиельской заметки вообще нет
-                !parentNote ||
-                // Или если она не групповая
-                (parentNote.group && parentNote.group._id.toString() !== groupId) ||
-                // Или если она не пользовательская
-                (parentNote.owner && parentNote.owner._id.toString() !== req.user._id.toString())
+                !parentNote
             ) {
                 return validationErrorResponse(res);
+            }
+
+            if (parentNote.group) {
+                // Автоматически назнваем groupId по родительской заметке
+                groupId = parentNote.group._id.toString();
             }
         }
 
         const newNote = new Note({
+            parent: parentId,
             title,
             icon,
             iconColor,
@@ -126,7 +143,7 @@ router.post(
         await newNote.save();
 
         return res.status(201).json({ note: newNote.toViewJSON() });
-    },
+    }
 );
 
 /**
@@ -194,13 +211,13 @@ router.patch(
                 if (!_.isUndefined(value)) {
                     note[field] = value;
                 }
-            },
+            }
         );
 
         await note.save();
 
         return res.json({ success: true });
-    },
+    }
 );
 
 /**

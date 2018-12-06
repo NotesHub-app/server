@@ -14,8 +14,8 @@ export function notFoundResponse(res, message = 'Item does not exist') {
  * @param errors
  * @returns {*}
  */
-export function validationErrorResponse(res, errors) {
-    return res.status(422).json({ errors: errors.array() });
+export function validationErrorResponse(res, errors = []) {
+    return res.status(422).json({ errors });
 }
 
 /**

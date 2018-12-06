@@ -8,12 +8,13 @@ import { notFoundResponse, validationErrorResponse } from '../utils/response';
  */
 export const checkValidation = (code = 422) => (req, res, next) => {
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
         if (code === 404) {
             return notFoundResponse(res);
         }
 
-        return validationErrorResponse(res, errors);
+        return validationErrorResponse(res, errors.array());
     }
     return next();
 };
