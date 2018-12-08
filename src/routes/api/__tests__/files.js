@@ -43,6 +43,7 @@ describe('files', () => {
 
             expect(response.body.file.fileName).toBe(fileData.fileName);
             expect(response.body.file.description).toBe(fileData.description);
+            expect(await Note.findOne({_id: note._id, files: response.body.file.id})).not.toBe(null);
         });
     });
 

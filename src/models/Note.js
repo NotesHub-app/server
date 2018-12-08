@@ -150,6 +150,7 @@ class NoteClass {
         return {
             ...this.toIndexJSON(),
             content: this.content,
+            files: this.files,
         };
     }
 }

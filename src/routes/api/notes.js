@@ -229,7 +229,7 @@ router.delete('/:note', allowToEditNote, async (req, res) => {
     const idsToRemove = await Note.getChildrenIdsOf(note);
     idsToRemove.push(note._id);
 
-    await Note.remove({ _id: { $in: idsToRemove } });
+    await Note.deleteMany({ _id: { $in: idsToRemove } });
 
     return res.json({ success: true });
 });

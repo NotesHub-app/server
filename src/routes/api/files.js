@@ -10,8 +10,7 @@ import { checkValidation } from '../../middlewares/validation';
 import Note from '../../models/Note';
 import File from '../../models/File';
 import { forbiddenResponse, notFoundResponse } from '../../utils/response';
-import mongooseConnectionPromise from '../../db'
-
+import mongooseConnectionPromise from '../../db';
 
 // Настройка multer аплоадера
 const upload = multer({
@@ -83,7 +82,7 @@ router.post(
         const { noteId, fileName, description } = req.body;
 
         // Проверяем, что файл привязывают к своей заметке
-        const note = Note.findOne({
+        const note = await Note.findOne({
             $and: [
                 // ID заметки
                 { _id: noteId },
@@ -99,7 +98,11 @@ router.post(
             fileName,
             description,
         });
-        file.save();
+        await file.save();
+
+        // Добавляем запись о файле в заметку
+        note.files.push(file);
+        await note.save();
 
         return res.status(201).json({ file: file.toIndexJSON() });
     },
