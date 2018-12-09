@@ -161,7 +161,7 @@ router.post('/:file/upload', [allowToEditFile, fileUpload], async (req, res) => 
     file.size = savedFile.size;
     await file.save();
 
-    return res.json({ success: true });
+    return res.json({ file: file.toIndexJSON() });
 });
 
 /**

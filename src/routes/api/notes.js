@@ -68,6 +68,9 @@ router.get('/', async (req, res) => {
 router.get('/:note', async (req, res) => {
     const { note } = req.params;
 
+    // Нам нужна также инфа по файлам заметки
+    await note.populate('files').execPopulate();
+
     return res.status(200).json({ note: note.toViewJSON() });
 });
 
@@ -143,7 +146,7 @@ router.post(
         await newNote.save();
 
         return res.status(201).json({ note: newNote.toViewJSON() });
-    }
+    },
 );
 
 /**
@@ -211,13 +214,13 @@ router.patch(
                 if (!_.isUndefined(value)) {
                     note[field] = value;
                 }
-            }
+            },
         );
 
         await note.save();
 
         return res.json({ success: true });
-    }
+    },
 );
 
 /**

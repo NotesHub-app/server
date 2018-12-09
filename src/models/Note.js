@@ -52,7 +52,7 @@ const mongoSchema = new mongoose.Schema(
         owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 class NoteClass {
@@ -150,7 +150,7 @@ class NoteClass {
         return {
             ...this.toIndexJSON(),
             content: this.content,
-            files: this.files,
+            files: this.files.map(file => file.toIndexJSON()),
         };
     }
 }

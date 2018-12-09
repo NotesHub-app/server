@@ -76,7 +76,7 @@ class UserClass {
                 id: this._id,
             },
             secret,
-            { expiresIn: 60 * 60 },
+            { expiresIn: 60 * 60 * 10 }, // 10min
         );
     }
 
