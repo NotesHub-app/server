@@ -107,7 +107,7 @@ router.post(
         await note.save();
 
         return res.status(201).json({ file: file.toIndexJSON() });
-    }
+    },
 );
 
 /**
@@ -142,13 +142,13 @@ router.patch(
                 if (!_.isUndefined(value)) {
                     file[field] = value;
                 }
-            }
+            },
         );
 
         await file.save();
 
         return res.json({ success: true });
-    }
+    },
 );
 
 /**
@@ -201,27 +201,33 @@ router.delete('/:file', allowToEditFile, async (req, res) => {
 router.delete(
     '/',
     [
-        allowToEditFile,
-
         // Валидация параметров
         check('ids').isArray(),
 
         checkValidation(),
     ],
-    async (req, res) => {
-        const { ids } = req.params;
 
+    async (req, res) => {
+        const { ids } = req.body;
+
+        const files = [];
+
+        // Сначала валидируем
         for (const fileId of ids) {
             await new Promise(resolve => fileParamFunction(req, res, resolve, fileId));
             await new Promise(resolve => allowToEditFile(req, res, resolve));
 
             const { file } = req.params;
+            files.push(file);
+        }
 
+        // А потом удаляем
+        for (const file of files) {
             await file.remove();
         }
 
         return res.json({ success: true });
-    }
+    },
 );
 
 export default router;

@@ -21,7 +21,7 @@ const mongoSchema = new mongoose.Schema(
             type: Number,
         },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 mongoSchema.pre('remove', async function(next) {

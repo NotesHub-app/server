@@ -112,7 +112,7 @@ describe('files', () => {
     describe('[GET /api/directDownload/:file]', () => {
         test('скачивание файла по прямой ссылке', async () => {
             const response = await request(app).get(
-                `/api/directDownload/${file._id}?token=${author.generateJWT('file')}`
+                `/api/directDownload/${file._id}?token=${author.generateJWT('file')}`,
             );
 
             expect(response.statusCode).toBe(200);
@@ -153,6 +153,30 @@ describe('files', () => {
             expect(response.statusCode).toBe(403);
 
             expect(await File.findById(anotherFile._id)).not.toBe(null);
+        });
+    });
+
+    describe.only('[DELETE /api/files]', () => {
+        test('удалить пакетно файлы', async () => {
+            const fileObj = {
+                fileName: 'file.jpg',
+                description: 'my file',
+            };
+
+            const file1 = await new File(fileObj).save();
+            const file2 = await new File(fileObj).save();
+
+            note = await new Note({ ...generateNote(), owner: author, files: [file1, file2] }).save();
+
+            const response = await request(app)
+                .delete(`/api/files`)
+                .send({ ids: [file1._id, file2._id] })
+                .set('Authorization', `JWT ${author.generateJWT()}`);
+
+            expect(response.statusCode).toBe(200);
+
+            expect(await File.findById(file1._id)).toBe(null);
+            expect(await File.findById(file2._id)).toBe(null);
         });
     });
 });
