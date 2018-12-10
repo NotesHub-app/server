@@ -190,14 +190,38 @@ router.get('/:file/download', async (req, res) => {
 router.delete('/:file', allowToEditFile, async (req, res) => {
     const { file } = req.params;
 
-    if (file.fsFileId) {
-        const bucket = new mongodb.GridFSBucket((await mongooseConnectionPromise).connection.db);
-        await bucket.delete(mongoose.Types.ObjectId(file.fsFileId));
-    }
-
     await file.remove();
 
     return res.json({ success: true });
 });
+
+/**
+ * Пакетное удаление файлов
+ */
+router.delete(
+    '/',
+    [
+        allowToEditFile,
+
+        // Валидация параметров
+        check('ids').isArray(),
+
+        checkValidation(),
+    ],
+    async (req, res) => {
+        const { ids } = req.params;
+
+        for (const fileId of ids) {
+            await new Promise(resolve => fileParamFunction(req, res, resolve, fileId));
+            await new Promise(resolve => allowToEditFile(req, res, resolve));
+
+            const { file } = req.params;
+
+            await file.remove();
+        }
+
+        return res.json({ success: true });
+    }
+);
 
 export default router;

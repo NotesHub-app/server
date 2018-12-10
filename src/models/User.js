@@ -94,7 +94,7 @@ class UserClass {
         return {
             email: this.email,
             token: `JWT ${this.generateJWT()}`,
-            fileToken: `JWT ${this.generateJWT('file')}`,
+            fileToken: this.generateJWT('file'),
         };
     }
 }
