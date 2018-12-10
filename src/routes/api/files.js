@@ -22,8 +22,7 @@ const fileUpload = upload.single('file');
 
 const router = express.Router();
 
-// Подгрузка File по параметру роута
-router.param('file', async (req, res, next, fileId) => {
+export const fileParamFunction = async (req, res, next, fileId) => {
     if (!validator.isMongoId(fileId)) {
         return notFoundResponse(res);
     }
@@ -51,7 +50,10 @@ router.param('file', async (req, res, next, fileId) => {
     req.params.fileNote = note;
 
     return next();
-});
+};
+
+// Подгрузка File по параметру роута
+router.param('file', fileParamFunction);
 
 /**
  * Middleware проверки, что пользователь может редактировать файл
@@ -105,7 +107,7 @@ router.post(
         await note.save();
 
         return res.status(201).json({ file: file.toIndexJSON() });
-    },
+    }
 );
 
 /**
@@ -140,13 +142,13 @@ router.patch(
                 if (!_.isUndefined(value)) {
                     file[field] = value;
                 }
-            },
+            }
         );
 
         await file.save();
 
         return res.json({ success: true });
-    },
+    }
 );
 
 /**

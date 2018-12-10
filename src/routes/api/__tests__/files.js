@@ -43,7 +43,7 @@ describe('files', () => {
 
             expect(response.body.file.fileName).toBe(fileData.fileName);
             expect(response.body.file.description).toBe(fileData.description);
-            expect(await Note.findOne({_id: note._id, files: response.body.file.id})).not.toBe(null);
+            expect(await Note.findOne({ _id: note._id, files: response.body.file.id })).not.toBe(null);
         });
     });
 
@@ -106,6 +106,26 @@ describe('files', () => {
                 .set('Authorization', `JWT ${author.generateJWT()}`);
 
             expect(response.statusCode).toBe(403);
+        });
+    });
+
+    describe('[GET /api/directDownload/:file]', () => {
+        test('скачивание файла по прямой ссылке', async () => {
+            const response = await request(app).get(
+                `/api/directDownload/${file._id}?token=${author.generateJWT('file')}`
+            );
+
+            expect(response.statusCode).toBe(200);
+            expect(response.headers['content-type']).toBe('image/jpeg');
+            expect(response.headers['content-disposition']).toBe('attachment; filename=file.jpg');
+
+            expect(file.size).toBe(response.body.length);
+        });
+
+        test('не получиться скачать по прямой ссылке используя классический токен', async () => {
+            const response = await request(app).get(`/api/directDownload/${file._id}?token=${author.generateJWT()}`);
+
+            expect(response.statusCode).toBe(401);
         });
     });
 

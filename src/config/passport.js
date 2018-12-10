@@ -25,27 +25,56 @@ passport.use(
             }
 
             return done(null, user);
-        },
-    ),
+        }
+    )
 );
 
-// Настройка проверки JWT токена
-passport.use(
-    new JwtStrategy(
-        {
-            jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('jwt'),
-            secretOrKey: secret,
-        },
-        async (payload, done) => {
-            try {
-                const user = await User.findById(payload.id);
-                if (user) {
-                    return done(null, user);
-                }
-                return done(null, false);
-            } catch (err) {
-                return done(err, false);
+// Стратегия jwt-auth
+const jwtAuthStrategy = new JwtStrategy(
+    {
+        jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('jwt'),
+        secretOrKey: secret,
+    },
+    async (payload, done) => {
+        if (payload.type !== 'auth') {
+            return done(null, false);
+        }
+
+        try {
+            const user = await User.findById(payload.id);
+            if (user) {
+                return done(null, user);
             }
-        },
-    ),
+            return done(null, false);
+        } catch (err) {
+            return done(err, false);
+        }
+    }
 );
+jwtAuthStrategy.name = 'jwt-auth';
+passport.use(jwtAuthStrategy);
+
+// Стратегия jwt-file
+const jwtFileStrategy = new JwtStrategy(
+    {
+        jwtFromRequest: ExtractJwt.fromUrlQueryParameter('token'),
+        secretOrKey: secret,
+    },
+    async (payload, done) => {
+        if (payload.type !== 'file') {
+            return done(null, false);
+        }
+
+        try {
+            const user = await User.findById(payload.id);
+            if (user) {
+                return done(null, user);
+            }
+            return done(null, false);
+        } catch (err) {
+            return done(err, false);
+        }
+    }
+);
+jwtFileStrategy.name = 'jwt-file';
+passport.use(jwtFileStrategy);

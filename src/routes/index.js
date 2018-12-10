@@ -7,7 +7,8 @@ import notesApiRouter from './api/notes';
 import registrationApiRouter from './api/registration';
 import restorePasswordApiRouter from './api/restorePassword';
 import usersApiRouter from './api/users';
-import { requireAuth } from '../middlewares/auth';
+import directDownloadApiRouter from './api/directDownload';
+import { requireAuth, requireFileAuth } from '../middlewares/auth';
 
 export default app => {
     // Инициализируем API роуты
@@ -20,6 +21,7 @@ export default app => {
     apiRouter.use('/files', [requireAuth], filesApiRouter);
     apiRouter.use('/groups', [requireAuth], groupsApiRouter);
     apiRouter.use('/users', [requireAuth], usersApiRouter);
+    apiRouter.use('/directDownload', [requireFileAuth], directDownloadApiRouter);
 
     app.use('/api', apiRouter);
 

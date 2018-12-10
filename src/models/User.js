@@ -43,7 +43,7 @@ const mongoSchema = new mongoose.Schema(
             },
         ],
     },
-    { timestamps: true },
+    { timestamps: true }
 );
 
 mongoSchema.plugin(uniqueValidator, { message: 'is already taken.' });
@@ -70,13 +70,14 @@ class UserClass {
         return bcrypt.compare(candidatePassword, this.password);
     }
 
-    generateJWT() {
+    generateJWT(type = 'auth') {
         return jwt.sign(
             {
                 id: this._id,
+                type,
             },
             secret,
-            { expiresIn: 60 * 60 * 10 }, // 10min
+            { expiresIn: 60 * 60 * 10 } // 10min
         );
     }
 
@@ -93,6 +94,7 @@ class UserClass {
         return {
             email: this.email,
             token: `JWT ${this.generateJWT()}`,
+            fileToken: `JWT ${this.generateJWT('file')}`,
         };
     }
 }
