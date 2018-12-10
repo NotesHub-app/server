@@ -3,9 +3,11 @@ import Group from './Group';
 import Note from './Note';
 import User from './User';
 
-export default {
+const models = {
     File,
     Group,
     Note,
     User,
 };
+
+export default models;

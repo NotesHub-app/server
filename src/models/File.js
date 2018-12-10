@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import mongodb from 'mongodb';
-import mongooseConnectionPromise from '../db';
 
 const mongoSchema = new mongoose.Schema(
     {
@@ -27,7 +26,7 @@ const mongoSchema = new mongoose.Schema(
 mongoSchema.pre('remove', async function(next) {
     // При удалении записи о файле удаляем также непосредственно сам файл
     if (this.fsFileId) {
-        const bucket = new mongodb.GridFSBucket((await mongooseConnectionPromise).connection.db);
+        const bucket = new mongodb.GridFSBucket(mongoose.connection.db);
         await bucket.delete(mongoose.Types.ObjectId(this.fsFileId));
     }
 

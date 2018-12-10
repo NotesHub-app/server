@@ -24,7 +24,7 @@ router.get('/:file', async (req, res) => {
     const bucket = new mongodb.GridFSBucket((await mongooseConnectionPromise).connection.db);
 
     res.setHeader('Content-type', file.mimeType);
-    res.setHeader('Content-Disposition', `attachment; filename=${file.fileName}`);
+    res.setHeader('Content-Disposition', `attachment; filename="${file.fileName}"`);
     return bucket.openDownloadStream(mongoose.Types.ObjectId(file.fsFileId)).pipe(res);
 });
 

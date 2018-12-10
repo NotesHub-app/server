@@ -29,7 +29,9 @@ async function makeNotes({ parent, group, owner, deepness = 0 }) {
 export default async function seed() {
     // Если нет пользователей
     if (!(await User.countDocuments())) {
+        console.log('F--1');
         await resetDB();
+        console.log('F--2');
 
         // Создаем группу
         const group = await new Group({

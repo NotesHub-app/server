@@ -89,7 +89,7 @@ describe('files', () => {
 
             expect(response.statusCode).toBe(200);
             expect(response.headers['content-type']).toBe('image/jpeg');
-            expect(response.headers['content-disposition']).toBe('attachment; filename=file.jpg');
+            expect(response.headers['content-disposition']).toBe('attachment; filename="file.jpg"');
 
             expect(file.size).toBe(response.body.length);
         });
@@ -117,7 +117,7 @@ describe('files', () => {
 
             expect(response.statusCode).toBe(200);
             expect(response.headers['content-type']).toBe('image/jpeg');
-            expect(response.headers['content-disposition']).toBe('attachment; filename=file.jpg');
+            expect(response.headers['content-disposition']).toBe('attachment; filename="file.jpg"');
 
             expect(file.size).toBe(response.body.length);
         });
@@ -156,7 +156,7 @@ describe('files', () => {
         });
     });
 
-    describe.only('[DELETE /api/files]', () => {
+    describe('[DELETE /api/files]', () => {
         test('удалить пакетно файлы', async () => {
             const fileObj = {
                 fileName: 'file.jpg',

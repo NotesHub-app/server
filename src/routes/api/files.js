@@ -177,10 +177,10 @@ router.get('/:file/download', async (req, res) => {
         return notFoundResponse(res);
     }
 
-    const bucket = new mongodb.GridFSBucket((await mongooseConnectionPromise).connection.db);
+    const bucket = new mongodb.GridFSBucket(mongoose.connection.db);
 
     res.setHeader('Content-type', file.mimeType);
-    res.setHeader('Content-Disposition', `attachment; filename=${file.fileName}`);
+    res.setHeader('Content-Disposition', `attachment; filename="${file.fileName}"`);
     return bucket.openDownloadStream(mongoose.Types.ObjectId(file.fsFileId)).pipe(res);
 });
 
