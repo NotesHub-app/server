@@ -54,6 +54,32 @@ const jwtAuthStrategy = new JwtStrategy(
 jwtAuthStrategy.name = 'jwt-auth';
 passport.use(jwtAuthStrategy);
 
+// Стратегия jwt-refresh
+const jwtRefreshStrategy = new JwtStrategy(
+    {
+        jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('jwt'),
+        secretOrKey: secret,
+    },
+    async (payload, done) => {
+        if (payload.type !== 'refresh') {
+            return done(null, false);
+        }
+
+        try {
+            const user = await User.findOne({ _id: payload.id, refreshTokenCode: payload.code });
+
+            if (user) {
+                return done(null, user);
+            }
+            return done(null, false);
+        } catch (err) {
+            return done(err, false);
+        }
+    }
+);
+jwtRefreshStrategy.name = 'jwt-refresh';
+passport.use(jwtRefreshStrategy);
+
 // Стратегия jwt-file
 const jwtFileStrategy = new JwtStrategy(
     {

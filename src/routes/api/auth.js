@@ -1,24 +1,27 @@
 import express from 'express';
-import { requireAuth, requireLogin } from '../../middlewares/auth';
-import { notFoundResponse } from '../../utils/response';
+import { requireLogin, requireRefreshAuth } from '../../middlewares/auth';
+
+import { randomString } from '../../utils/string';
 
 const router = express.Router();
 
-function getAuthJSON(req, res) {
-    if (!req.user) {
-        return notFoundResponse('Unknown user');
-    }
-    return res.status(200).json(req.user.toAuthJSON());
-}
+const authFunc = async (req, res) => {
+    const { remember } = req.body;
+
+    req.user.refreshTokenCode = randomString(10);
+    await req.user.save();
+
+    return res.status(200).json(req.user.toAuthJSON(!!remember));
+};
 
 /**
  * Авторизация
  */
-router.post('/login', requireLogin, getAuthJSON);
+router.post('/login', requireLogin, authFunc);
 
 /**
  * Обновление токена
  */
-router.get('/keep-token', requireAuth, getAuthJSON);
+router.post('/keep-token', requireRefreshAuth, authFunc);
 
 export default router;

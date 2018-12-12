@@ -42,6 +42,7 @@ const mongoSchema = new mongoose.Schema(
                 },
             },
         ],
+        refreshTokenCode: String,
     },
     { timestamps: true }
 );
@@ -70,17 +71,33 @@ class UserClass {
         return bcrypt.compare(candidatePassword, this.password);
     }
 
-    generateJWT(type = 'auth') {
+    /**
+     * Генерация JWT токена
+     * @param type - тип токена
+     * @param expiresIn - в секундах
+     * @param additionalData
+     * @returns {*}
+     */
+    generateJWT({ type, expiresIn, additionalData } = {}) {
+        type = type || 'auth';
+        //expiresIn = expiresIn || 300;
+        expiresIn = expiresIn || 30;
+        additionalData = additionalData || {};
+
         return jwt.sign(
             {
                 id: this._id,
                 type,
+                ...additionalData,
             },
             secret,
-            { expiresIn: 60 * 60 * 10 } // 10min
+            { expiresIn } // 10min
         );
     }
 
+    /**
+     * Генерация кода восстановления пароля
+     */
     generateRestorePasswordCode() {
         const user = this;
 
@@ -90,11 +107,22 @@ class UserClass {
         });
     }
 
-    toAuthJSON() {
+    /**
+     * Сгернерировать ответ для авторизации
+     * @param remember - делать refresh-токен долгоживущим
+     * @returns {{fileToken: *, email: *, token: string, refreshToken: string}}
+     */
+    toAuthJSON(remember) {
         return {
             email: this.email,
             token: `JWT ${this.generateJWT()}`,
-            fileToken: this.generateJWT('file'),
+            fileToken: this.generateJWT({ type: 'file' }),
+            refreshToken: `JWT ${this.generateJWT({
+                type: 'refresh',
+                // expiresIn: remember ? 604800 : 600, // 7 дней или 10 минут
+                expiresIn: 604800, // 7 дней или 10 минут
+                additionalData: { code: this.refreshTokenCode },
+            })}`,
         };
     }
 }
