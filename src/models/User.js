@@ -140,7 +140,7 @@ class UserClass {
     toFullUserJSON() {
         return {
             ...this.toAuthJSON(),
-            uiSettings: this.uiSettings,
+            uiSettings: this.uiSettings || {},
         };
     }
 }
