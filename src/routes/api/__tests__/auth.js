@@ -60,10 +60,10 @@ describe('auth', () => {
         });
     });
 
-    describe('[POST /api/auth/keep-token]', () => {
+    describe('[POST /api/auth/refresh-token]', () => {
         test('попытка обновления токена с auth-токеном', async () => {
             const response = await request(app)
-                .post('/api/auth/keep-token')
+                .post('/api/auth/refresh-token')
                 .set('Authorization', token)
                 .send({});
 
@@ -72,7 +72,7 @@ describe('auth', () => {
 
         test('успешное обновление токена с refresh-токеном', async () => {
             const response = await request(app)
-                .post('/api/auth/keep-token')
+                .post('/api/auth/refresh-token')
                 .set('Authorization', refreshToken)
                 .send({});
 
@@ -83,7 +83,7 @@ describe('auth', () => {
 
         test('повторное использование refresh-токена даст ошибку', async () => {
             const response = await request(app)
-                .post('/api/auth/keep-token')
+                .post('/api/auth/refresh-token')
                 .set('Authorization', refreshToken)
                 .send({});
 
@@ -92,7 +92,7 @@ describe('auth', () => {
 
         test('попытка заслать неверный токен', async () => {
             const response = await request(app)
-                .post('/api/auth/keep-token')
+                .post('/api/auth/refresh-token')
                 .set('Authorization', 'WRONG_TOKEN!')
                 .send({});
 
@@ -100,10 +100,10 @@ describe('auth', () => {
         });
 
         test('попытка заслать просроченный refresh-токен', async () => {
-            timekeeper.travel(new Date(dayjs().add(20, 'days')));
+            timekeeper.travel(new Date(dayjs().add(400, 'days')));
 
             const response = await request(app)
-                .post('/api/auth/keep-token')
+                .post('/api/auth/refresh-token')
                 .set('Authorization', newRefreshToken)
                 .send({});
 

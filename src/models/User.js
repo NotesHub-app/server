@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import dayjs from 'dayjs';
 import { secret } from '../config';
 import { randomString } from '../utils/string';
+import * as _ from 'lodash';
 
 const mongoSchema = new mongoose.Schema(
     {
@@ -43,6 +44,7 @@ const mongoSchema = new mongoose.Schema(
             },
         ],
         refreshTokenCode: String,
+        uiSettings: Object, // TODO определить фиксированные поля
     },
     { timestamps: true }
 );
@@ -78,12 +80,7 @@ class UserClass {
      * @param additionalData
      * @returns {*}
      */
-    generateJWT({ type, expiresIn, additionalData } = {}) {
-        type = type || 'auth';
-        //expiresIn = expiresIn || 300;
-        expiresIn = expiresIn || 30;
-        additionalData = additionalData || {};
-
+    generateJWT({ type = 'auth', expiresIn = 300, additionalData = {} } = {}) {
         return jwt.sign(
             {
                 id: this._id,
@@ -91,7 +88,7 @@ class UserClass {
                 ...additionalData,
             },
             secret,
-            { expiresIn } // 10min
+            { expiresIn }
         );
     }
 
@@ -107,22 +104,43 @@ class UserClass {
         });
     }
 
+    generateRefreshTokenCode() {
+        this.refreshTokenCode = randomString(10);
+    }
+
     /**
      * Сгернерировать ответ для авторизации
-     * @param remember - делать refresh-токен долгоживущим
      * @returns {{fileToken: *, email: *, token: string, refreshToken: string}}
      */
-    toAuthJSON(remember) {
+    toAuthJSON() {
         return {
             email: this.email,
             token: `JWT ${this.generateJWT()}`,
             fileToken: this.generateJWT({ type: 'file' }),
             refreshToken: `JWT ${this.generateJWT({
                 type: 'refresh',
-                // expiresIn: remember ? 604800 : 600, // 7 дней или 10 минут
-                expiresIn: 604800, // 7 дней или 10 минут
+                expiresIn: 86400 * 90, // 3 месяца
                 additionalData: { code: this.refreshTokenCode },
             })}`,
+        };
+    }
+
+    updateUiSetting(uiSettings) {
+        const resultSettings = { ...this.uiSettings };
+        for (const [param, value] of Object.entries(uiSettings)) {
+            resultSettings[param] = value;
+        }
+        this.uiSettings = resultSettings;
+    }
+
+    /**
+     * Сгернерировать ответ для получние полного объекта пользователя
+     * @returns {{fileToken: *, email: *, token: string, refreshToken: string}}
+     */
+    toFullUserJSON() {
+        return {
+            ...this.toAuthJSON(),
+            uiSettings: this.uiSettings,
         };
     }
 }

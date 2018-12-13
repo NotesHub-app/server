@@ -5,23 +5,32 @@ import { randomString } from '../../utils/string';
 
 const router = express.Router();
 
-const authFunc = async (req, res) => {
-    const { remember } = req.body;
-
-    req.user.refreshTokenCode = randomString(10);
-    await req.user.save();
-
-    return res.status(200).json(req.user.toAuthJSON(!!remember));
-};
-
 /**
  * Авторизация
  */
-router.post('/login', requireLogin, authFunc);
+router.post('/login', requireLogin, async (req, res) => {
+    req.user.refreshTokenCode = randomString(10);
+    await req.user.save();
+
+    return res.status(200).json(req.user.toFullUserJSON());
+});
 
 /**
  * Обновление токена
  */
-router.post('/keep-token', requireRefreshAuth, authFunc);
+router.post('/refresh-token', requireRefreshAuth, async (req, res) => {
+    const withUserData = req.body;
+    req.user.refreshTokenCode = randomString(10);
+    await req.user.save();
+
+    let result;
+    if (withUserData) {
+        result = req.user.toFullUserJSON();
+    } else {
+        result = req.user.toAuthJSON();
+    }
+
+    return res.status(200).json(result);
+});
 
 export default router;
