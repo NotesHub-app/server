@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
     rootDir: process.cwd(),
-    // testRegex: "__tests__/(users).js",
+    testRegex: "__tests__/(groups).js",
     // forceExit: true,
 
     globalSetup: path.join(__dirname, 'setup.js'),

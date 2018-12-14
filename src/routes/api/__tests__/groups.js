@@ -52,18 +52,29 @@ describe('groups', () => {
     });
 
     describe('[PATCH /api/groups/:group]', () => {
-        test('обновление группы группы', async () => {
+        test('обновление группы', async () => {
             // Нужный пользователь и нужная группа
             const group = await new Group({ title: 'group1' }).save();
             const author = await new User({ email: 'user2@email.com', groups: [{ group, role: 0 }] }).save();
+            let user1 = await new User({ email: 'groupUser1@email.com', groups: [{ group, role: 1 }] }).save();
+            let user2 = await new User({ email: 'groupUser2@email.com', groups: [{ group, role: 1 }] }).save();
 
             const response = await request(app)
                 .patch(`/api/groups/${group._id}`)
-                .send({ title: 'new title' })
+                .send({
+                    title: 'new title',
+                    users: [{ id: user1._id, role: 2 }, { id: user2._id, deleted: true }],
+                })
                 .set('Authorization', `JWT ${author.generateJWT()}`);
 
             expect(response.statusCode).toBe(200);
             expect(response.body.success).toBe(true);
+
+            user1 = await User.findById(user1._id);
+            user2 = await User.findById(user2._id);
+
+            expect(user1.groups[0].role).toBe(2);
+            expect(user2.groups).toHaveLength(0);
         });
 
         test('нелья обновить чужую группу', async () => {
@@ -223,6 +234,29 @@ describe('groups', () => {
                 .set('Authorization', `JWT ${anotherUser.generateJWT()}`);
 
             expect(responseJoin.statusCode).toBe(403);
+        });
+    });
+
+    describe('[GET /api/groups/:group]', () => {
+        test('получения детальной инфы о группе', async () => {
+            await resetDB();
+
+            // Нужный пользователь и нужная группа
+            const group = await new Group({ title: 'group' }).save();
+            const user = await new User({ email: 'user@email.com', groups: [{ group, role: 0 }] }).save();
+            const anotherUser = await new User({ email: 'anotherUser@email.com', groups: [{ group, role: 1 }] }).save();
+
+            const response = await request(app)
+                .get(`/api/groups/${group._id}`)
+                .set('Authorization', `JWT ${user.generateJWT()}`);
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body.group.title).toBe('group');
+            expect(response.body.group.users).toHaveLength(1);
+            expect(response.body.group.users[0].id).toBe(anotherUser._id.toString());
+            expect(response.body.group.users[0].email).toBe(anotherUser.email);
+            expect(response.body.group.users[0].role).toBe(1);
         });
     });
 });

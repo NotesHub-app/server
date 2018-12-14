@@ -6,6 +6,7 @@ import express from 'express';
 import { checkValidation } from '../../middlewares/validation';
 import Group from '../../models/Group';
 import { alreadyDoneResponse, forbiddenResponse, notFoundResponse } from '../../utils/response';
+import User from '../../models/User';
 
 const router = express.Router();
 
@@ -36,6 +37,15 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * получение детальной инфы о группе
+ */
+router.get('/:group', async (req, res) => {
+    const { group } = req.params;
+
+    res.status(200).json({ group: await group.toViewJSON(req.user) });
+});
+
+/**
  * создание новой группы
  */
 router.post(
@@ -63,7 +73,7 @@ router.post(
         await req.user.save();
 
         res.status(201).json({ group: newGroup.toIndexJSON(req.user) });
-    },
+    }
 );
 
 /**
@@ -74,16 +84,37 @@ router.patch(
     [
         // Валидация параметров
         check('title')
+            .optional()
             .isString()
             .isLength({ min: 1 }),
+        check('users')
+            .optional()
+            .isArray(),
         checkValidation(),
     ],
     async (req, res) => {
         const { group } = req.params;
-        const { title } = req.body;
+        const { title, users } = req.body;
 
         if (!group.checkAllowToEdit(req.user)) {
             return forbiddenResponse(res);
+        }
+
+        // Обновляем группы у пользователей
+        for (const formUser of users) {
+            // console.log(formUser);
+            const user = await User.findById(formUser.id);
+            if (formUser.deleted) {
+                user.groups = [...user.groups].filter(i => i.group.toString() !== group._id.toString());
+            } else if (formUser.role !== undefined) {
+                user.groups = [...user.groups].map(item => {
+                    if (item.group.toString() === group._id.toString()) {
+                        item.role = formUser.role;
+                    }
+                    return item;
+                });
+            }
+            await user.save();
         }
 
         // Обновляем только те поля которые пришли с запросом
@@ -95,13 +126,12 @@ router.patch(
                 if (!_.isUndefined(value)) {
                     group[field] = value;
                 }
-            },
+            }
         );
-
         await group.save();
 
         return res.json({ success: true });
-    },
+    }
 );
 
 /**
@@ -142,7 +172,7 @@ router.get(
         await group.save();
 
         return res.json({ ...codeObj, groupId: group._id.toString() });
-    },
+    }
 );
 
 /**
@@ -164,7 +194,7 @@ router.post(
                 // Код совпадает
                 i.code === code &&
                 // Код всё еще не просрочен
-                dayjs().isBefore(dayjs(i.expireDate)),
+                dayjs().isBefore(dayjs(i.expireDate))
         );
         if (!inviteCode) {
             return forbiddenResponse(res);
@@ -180,7 +210,7 @@ router.post(
         await req.user.save();
 
         return res.json({ success: true });
-    },
+    }
 );
 
 export default router;

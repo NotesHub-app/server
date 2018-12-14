@@ -29,9 +29,7 @@ async function makeNotes({ parent, group, owner, deepness = 0 }) {
 export default async function seed() {
     // Если нет пользователей
     if (!(await User.countDocuments())) {
-        console.log('F--1');
         await resetDB();
-        console.log('F--2');
 
         // Создаем группу
         const group = await new Group({
@@ -48,6 +46,15 @@ export default async function seed() {
 
         await makeNotes({ owner: user });
         await makeNotes({ group });
+
+        for (const i of _.range(10)) {
+            await new User({
+                email: `user${i}@email.com`,
+                password: 'password',
+                registration: { verified: true },
+                groups: [{ group, role: _.random(0,2) }],
+            }).save();
+        }
 
         console.info('DB seeded');
     } else {

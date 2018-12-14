@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import dayjs from 'dayjs';
 import { randomString } from '../utils/string';
+import User from './User';
 
 const mongoSchema = new mongoose.Schema(
     {
@@ -27,7 +28,7 @@ const mongoSchema = new mongoose.Schema(
             },
         ],
     },
-    { timestamps: true },
+    { timestamps: true }
 );
 
 class GroupClass {
@@ -74,6 +75,34 @@ class GroupClass {
             id: this._id,
             title: this.title,
             myRole: role,
+        };
+    }
+
+    /**
+     * Вывод для отображения в настройках группы
+     * @param user
+     * @returns {{myRole, id, title, users: Array}}
+     */
+    async toViewJSON(user) {
+        const users = await User.find({ groups: { $elemMatch: { group: this } } });
+
+        const resultUsers = [];
+        users.forEach(({ groups, _id, email }) => {
+            // Самого пользователя не заносим в массив
+            if (user._id.toString() === _id.toString()) {
+                return;
+            }
+            const { role } = groups.find(i => i.group.toString() === this._id.toString());
+            resultUsers.push({
+                id: _id,
+                email,
+                role,
+            });
+        });
+
+        return {
+            ...this.toIndexJSON(user),
+            users: resultUsers,
         };
     }
 }
