@@ -17,7 +17,8 @@ router.patch(
         check('uiSettings').optional(),
         check('password')
             .optional()
-            .isLength({ min: 8 }),
+            .isLength({ min: 8 })
+            .withMessage('Пароль должен содержать минимум 8 символов'),
         checkValidation(),
     ],
     async (req, res) => {
@@ -35,7 +36,7 @@ router.patch(
         await user.save();
 
         return res.json({ success: true });
-    }
+    },
 );
 
 export default router;

@@ -10,6 +10,10 @@ import User from '../../models/User';
 
 const router = express.Router();
 
+const validatorMessages = {
+    title: 'Название группы должно содержать хотя бы 1 символ',
+};
+
 // Подгрузка Group по параметру роута
 router.param('group', async (req, res, next, groupId) => {
     if (!validator.isMongoId(groupId)) {
@@ -54,7 +58,8 @@ router.post(
         // Валидация параметров
         check('title')
             .isString()
-            .isLength({ min: 1 }),
+            .isLength({ min: 1 })
+            .withMessage(validatorMessages.title),
         checkValidation(),
     ],
     async (req, res) => {
@@ -73,7 +78,7 @@ router.post(
         await req.user.save();
 
         res.status(201).json({ group: newGroup.toIndexJSON(req.user) });
-    }
+    },
 );
 
 /**
@@ -86,7 +91,8 @@ router.patch(
         check('title')
             .optional()
             .isString()
-            .isLength({ min: 1 }),
+            .isLength({ min: 1 })
+            .withMessage(validatorMessages.title),
         check('users')
             .optional()
             .isArray(),
@@ -126,12 +132,12 @@ router.patch(
                 if (!_.isUndefined(value)) {
                     group[field] = value;
                 }
-            }
+            },
         );
         await group.save();
 
         return res.json({ success: true });
-    }
+    },
 );
 
 /**
@@ -172,7 +178,7 @@ router.get(
         await group.save();
 
         return res.json({ ...codeObj, groupId: group._id.toString() });
-    }
+    },
 );
 
 /**
@@ -194,7 +200,7 @@ router.post(
                 // Код совпадает
                 i.code === code &&
                 // Код всё еще не просрочен
-                dayjs().isBefore(dayjs(i.expireDate))
+                dayjs().isBefore(dayjs(i.expireDate)),
         );
         if (!inviteCode) {
             return forbiddenResponse(res);
@@ -210,7 +216,7 @@ router.post(
         await req.user.save();
 
         return res.json({ success: true });
-    }
+    },
 );
 
 export default router;

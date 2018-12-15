@@ -14,8 +14,12 @@ router.post(
     '/',
     [
         // Валидация полей
-        check('email').isEmail(),
-        check('password').isLength({ min: 8 }),
+        check('email')
+            .isEmail()
+            .withMessage('Email адрес имеет не верный формат'),
+        check('password')
+            .isLength({ min: 8 })
+            .withMessage('Пароль должен содержать минимум 8 символов'),
         checkValidation(),
     ],
     async (req, res) => {
@@ -61,7 +65,7 @@ router.post(
         }
 
         return res.json({ success: true });
-    }
+    },
 );
 
 /**
@@ -92,7 +96,7 @@ router.post(
         await user.save();
 
         return res.json({ success: true });
-    }
+    },
 );
 
 export default router;

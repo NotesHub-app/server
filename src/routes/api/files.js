@@ -12,6 +12,10 @@ import File from '../../models/File';
 import { forbiddenResponse, notFoundResponse } from '../../utils/response';
 import mongooseConnectionPromise from '../../db';
 
+const validatorMessages = {
+    fileName: 'Имя файла должно содержать хотя бы 1 символ',
+};
+
 // Настройка multer аплоадера
 const upload = multer({
     storage: GridFSStorage({
@@ -74,7 +78,10 @@ router.post(
     '/',
     [
         // Валидация параметров
-        check('fileName').isString(),
+        check('fileName')
+            .isString()
+            .isLength({ min: 1 })
+            .withMessage(validatorMessages.fileName),
         check('description').isString(),
         check('noteId').isMongoId(),
 
@@ -121,7 +128,9 @@ router.patch(
         // Валидация параметров
         check('fileName')
             .optional()
-            .isString(),
+            .isString()
+            .isLength({ min: 1 })
+            .withMessage(validatorMessages.fileName),
         check('description')
             .optional()
             .isString(),

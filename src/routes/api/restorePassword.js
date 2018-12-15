@@ -14,7 +14,9 @@ router.post(
     '/',
     [
         // Валидация параметров
-        check('email').isEmail(),
+        check('email')
+            .isEmail()
+            .withMessage('Email адрес имеет не верный формат'),
         checkValidation(),
     ],
     async (req, res) => {
@@ -32,7 +34,7 @@ router.post(
         await user.save();
 
         if (process.env.NODE_ENV === 'development') {
-            const {code} = _.last(user.restorePasswordCodes);
+            const { code } = _.last(user.restorePasswordCodes);
             console.info(`:::: RESTORE PASSWORD CODE FOR ${user.email}:    ${code}`);
         }
         if (process.env.NODE_ENV === 'production') {
@@ -53,7 +55,9 @@ router.post(
     [
         // Валидация параметров
         check('code').isString(),
-        check('password').isLength({ min: 8 }),
+        check('password')
+            .isLength({ min: 8 })
+            .withMessage('Пароль должен содержать минимум 8 символов'),
         checkValidation(),
     ],
     async (req, res) => {
