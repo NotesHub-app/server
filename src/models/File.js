@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import mongodb from 'mongodb';
+import uuidv4 from 'uuid/v4';
 
 const mongoSchema = new mongoose.Schema(
     {
@@ -19,9 +20,19 @@ const mongoSchema = new mongoose.Schema(
         size: {
             type: Number,
         },
+        downloadCode: { type: String, unique: true },
     },
     { timestamps: true },
 );
+
+mongoSchema.pre('save', async function() {
+    const file = this;
+
+    // При сохранении добавляем код для скачивания
+    if (!file.downloadCode) {
+        file.downloadCode = uuidv4();
+    }
+});
 
 mongoSchema.pre('remove', async function(next) {
     // При удалении записи о файле удаляем также непосредственно сам файл
@@ -44,6 +55,7 @@ class FileClass {
             description: this.description,
             size: this.size,
             mimeType: this.mimeType,
+            downloadCode: this.downloadCode,
         };
     }
 }

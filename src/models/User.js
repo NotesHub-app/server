@@ -46,7 +46,7 @@ const mongoSchema = new mongoose.Schema(
         refreshTokenCode: String,
         uiSettings: Object, // TODO определить фиксированные поля
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 mongoSchema.plugin(uniqueValidator, { message: 'is already taken.' });
@@ -88,7 +88,7 @@ class UserClass {
                 ...additionalData,
             },
             secret,
-            { expiresIn }
+            { expiresIn },
         );
     }
 
@@ -116,7 +116,10 @@ class UserClass {
         return {
             email: this.email,
             token: `JWT ${this.generateJWT()}`,
-            fileToken: this.generateJWT({ type: 'file' }),
+            fileToken: this.generateJWT({
+                type: 'file',
+                expiresIn: 86400 * 7, // 7 дней
+            }),
             refreshToken: `JWT ${this.generateJWT({
                 type: 'refresh',
                 expiresIn: 86400 * 90, // 3 месяца

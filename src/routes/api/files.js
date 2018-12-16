@@ -11,6 +11,7 @@ import Note from '../../models/Note';
 import File from '../../models/File';
 import { forbiddenResponse, notFoundResponse } from '../../utils/response';
 import mongooseConnectionPromise from '../../db';
+import { getAttachmentHeaderString } from '../../utils/string';
 
 const validatorMessages = {
     fileName: 'Имя файла должно содержать хотя бы 1 символ',
@@ -27,7 +28,7 @@ const fileUpload = upload.single('file');
 const router = express.Router();
 
 export const fileParamFunction = async (req, res, next, fileId) => {
-    if (!validator.isMongoId(fileId)) {
+    if (!fileId || !validator.isMongoId(fileId)) {
         return notFoundResponse(res);
     }
 
@@ -189,7 +190,7 @@ router.get('/:file/download', async (req, res) => {
     const bucket = new mongodb.GridFSBucket(mongoose.connection.db);
 
     res.setHeader('Content-type', file.mimeType);
-    res.setHeader('Content-Disposition', `attachment; filename="${file.fileName}"`);
+    res.setHeader('Content-Disposition', getAttachmentHeaderString(req, file.fileName));
     return bucket.openDownloadStream(mongoose.Types.ObjectId(file.fsFileId)).pipe(res);
 });
 
