@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import DiffMatchPatch from 'diff-match-patch';
 import * as _ from 'lodash';
+import Group from './Group';
 
 /**
  * Сохраняет предудущее состояние поля
@@ -143,6 +144,26 @@ class NoteClass {
             groupId: this.group,
             parentId: this.parent,
         };
+    }
+
+    /**
+     * Получить массив ID-ов причастных к заметке пользователей
+     * @returns {Promise<*>}
+     */
+    async getInvolvedUserIds() {
+        const note = this;
+
+        if (note.group) {
+            const group = await Group.findById(note.group);
+            const users = await group.getUsers();
+            return users.map(i => i._id.toString());
+        }
+
+        if (note.owner) {
+            return [note.owner.toString()];
+        }
+
+        return [];
     }
 
     /** Вывод для отображения заметки с содержимым */

@@ -28,7 +28,7 @@ const mongoSchema = new mongoose.Schema(
             },
         ],
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 class GroupClass {
@@ -78,13 +78,19 @@ class GroupClass {
         };
     }
 
+    async getUsers() {
+        const group = this;
+
+        return await User.find({ groups: { $elemMatch: { group } } });
+    }
+
     /**
      * Вывод для отображения в настройках группы
      * @param user
      * @returns {{myRole, id, title, users: Array}}
      */
     async toViewJSON(user) {
-        const users = await User.find({ groups: { $elemMatch: { group: this } } });
+        const users = await this.getUsers();
 
         const resultUsers = [];
         users.forEach(({ groups, _id, email }) => {

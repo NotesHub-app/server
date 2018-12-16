@@ -2,7 +2,7 @@ import { check } from 'express-validator/check';
 import * as _ from 'lodash';
 import validator from 'validator';
 import express from 'express';
-import mongoose from 'mongoose';
+import ws from '../../ws';
 import Note from '../../models/Note';
 import { checkValidation } from '../../middlewares/validation';
 import { forbiddenResponse, notFoundResponse, validationErrorResponse } from '../../utils/response';
@@ -219,7 +219,9 @@ router.patch(
 
         await note.save();
 
-        return res.json({ success: true });
+        await ws.notifyNoteUpdate(note);
+
+        return res.json({ success: true, updatedAt: note.updatedAt.getTime() });
     },
 );
 
