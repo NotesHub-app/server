@@ -142,7 +142,7 @@ class NoteClass {
         const note = this;
         if (note.group) {
             const userGroup = user.groups.find(i => i.group._id.toString() === note.group._id.toString());
-            if (userGroup.role > 1) {
+            if (!userGroup || userGroup.role > 1) {
                 return false;
             }
         } else if (note.owner) {
@@ -151,20 +151,6 @@ class NoteClass {
             }
         }
         return true;
-    }
-
-    /** Вывод для общего списка заметок в дереве */
-    toIndexJSON() {
-        return {
-            id: this._id,
-            title: this.title,
-            icon: this.icon,
-            iconColor: this.iconColor,
-            ownerId: this.owner,
-            groupId: this.group,
-            parentId: this.parent,
-            updatedAt: this.updatedAt.getTime(),
-        };
     }
 
     /**
@@ -181,10 +167,24 @@ class NoteClass {
         }
 
         if (note.owner) {
-            return [note.owner.toString()];
+            return [note.owner._id.toString()];
         }
 
         return [];
+    }
+
+    /** Вывод для общего списка заметок в дереве */
+    toIndexJSON() {
+        return {
+            id: this._id,
+            title: this.title,
+            icon: this.icon,
+            iconColor: this.iconColor,
+            ownerId: this.owner,
+            groupId: this.group,
+            parentId: this.parent,
+            updatedAt: this.updatedAt.getTime(),
+        };
     }
 
     /** Вывод для отображения заметки с содержимым */
