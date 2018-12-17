@@ -25,6 +25,7 @@ module.exports = {
         'no-console': ['error', { allow: ['warn', 'error', 'info'] }],
         'no-mixed-operators': 'off',
         'no-await-in-loop': 'off',
+        'consistent-return': 'off',
         'func-names': ['error', 'never'],
         'prefer-destructuring': [
             'error',

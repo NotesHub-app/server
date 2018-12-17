@@ -2,7 +2,6 @@ import { check } from 'express-validator/check';
 import * as _ from 'lodash';
 import validator from 'validator';
 import express from 'express';
-import ws from '../../ws';
 import Note from '../../models/Note';
 import { checkValidation } from '../../middlewares/validation';
 import { forbiddenResponse, notFoundResponse, validationErrorResponse } from '../../utils/response';
@@ -145,8 +144,10 @@ router.post(
 
         await newNote.save();
 
-        return res.status(201).json({ note: newNote.toViewJSON() });
-    },
+        await res.status(201).json({ note: newNote.toViewJSON() });
+
+        await newNote.notifyUpdate();
+    }
 );
 
 /**
@@ -214,15 +215,15 @@ router.patch(
                 if (!_.isUndefined(value)) {
                     note[field] = value;
                 }
-            },
+            }
         );
 
         await note.save();
 
-        await ws.notifyNoteUpdate(note);
+        await res.json({ success: true, updatedAt: note.updatedAt.getTime() });
 
-        return res.json({ success: true, updatedAt: note.updatedAt.getTime() });
-    },
+        await note.notifyUpdate();
+    }
 );
 
 /**
@@ -234,9 +235,16 @@ router.delete('/:note', allowToEditNote, async (req, res) => {
     const idsToRemove = await Note.getChildrenIdsOf(note);
     idsToRemove.push(note._id);
 
-    await Note.deleteMany({ _id: { $in: idsToRemove } });
+    for (const id of idsToRemove) {
+        const noteToRemove = await Note.findById(id);
+        if (noteToRemove) {
+            await noteToRemove.remove();
 
-    return res.json({ success: true });
+            await noteToRemove.notifyRemove();
+        }
+    }
+
+    await res.json({ success: true });
 });
 
 export default router;

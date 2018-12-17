@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import DiffMatchPatch from 'diff-match-patch';
 import * as _ from 'lodash';
 import Group from './Group';
+import bcrypt from 'bcryptjs';
+import ws from '../ws';
 
 /**
  * Сохраняет предудущее состояние поля
@@ -53,10 +55,30 @@ const mongoSchema = new mongoose.Schema(
         owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' },
     },
-    { timestamps: true },
+    { timestamps: true }
 );
 
 class NoteClass {
+    async notifyUpdate() {
+        const note = this;
+        ws.notifyNoteUpdate(note, await note.getInvolvedUserIds());
+    }
+
+    async notifyFileUpdate(file) {
+        const note = this;
+        ws.notifyNoteFileUpdate(note, file, await note.getInvolvedUserIds());
+    }
+
+    async notifyFileRemove(fileId) {
+        const note = this;
+        ws.notifyNoteFileRemove(note, fileId, await note.getInvolvedUserIds());
+    }
+
+    async notifyRemove() {
+        const note = this;
+        ws.notifyNoteRemove(note._id.toString(), await note.getInvolvedUserIds());
+    }
+
     /**
      * Сгенерировать историю правок сделанных пользователем
      * @param user
@@ -143,6 +165,7 @@ class NoteClass {
             ownerId: this.owner,
             groupId: this.group,
             parentId: this.parent,
+            updatedAt: this.updatedAt.getTime(),
         };
     }
 

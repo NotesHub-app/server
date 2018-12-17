@@ -115,7 +115,7 @@ router.post(
         await note.save();
 
         return res.status(201).json({ file: file.toIndexJSON() });
-    },
+    }
 );
 
 /**
@@ -152,20 +152,20 @@ router.patch(
                 if (!_.isUndefined(value)) {
                     file[field] = value;
                 }
-            },
+            }
         );
 
         await file.save();
 
         return res.json({ success: true });
-    },
+    }
 );
 
 /**
  * Залить содержимое файла
  */
 router.post('/:file/upload', [allowToEditFile, fileUpload], async (req, res) => {
-    const { file } = req.params;
+    const { file, fileNote } = req.params;
     const savedFile = req.file;
 
     file.fsFileId = savedFile.id;
@@ -173,7 +173,9 @@ router.post('/:file/upload', [allowToEditFile, fileUpload], async (req, res) => 
     file.size = savedFile.size;
     await file.save();
 
-    return res.json({ file: file.toIndexJSON() });
+    await res.json({ file: file.toIndexJSON() });
+
+    await fileNote.notifyFileUpdate(file);
 });
 
 /**
@@ -228,16 +230,18 @@ router.delete(
             await new Promise(resolve => allowToEditFile(req, res, resolve));
 
             const { file } = req.params;
-            files.push(file);
+
+            files.push([req.params.fileNote, file]);
         }
 
         // А потом удаляем
-        for (const file of files) {
+        for (const [note, file] of files) {
             await file.remove();
+            await note.notifyFileRemove(file._id);
         }
 
-        return res.json({ success: true });
-    },
+        await res.json({ success: true });
+    }
 );
 
 export default router;

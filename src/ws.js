@@ -1,6 +1,7 @@
 import socketIO from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { secret } from './config';
+import User from './models/User';
 
 class WS {
     clients = [];
@@ -8,21 +9,25 @@ class WS {
     init(app) {
         this.io = socketIO(app);
 
+        // middleware
+        this.io.use((socket, next) => {
+            let { token } = socket.handshake.query;
+
+            try {
+                token = token.replace('JWT ', '');
+                socket.payload = jwt.verify(token, secret);
+
+                return next();
+            } catch (e) {
+                return next(new Error('authentication error'));
+            }
+        });
+
         this.io.on('connection', socket => {
             const client = {
                 socket,
+                userId: socket.payload.id,
             };
-
-            socket.on('auth', ({ token }) => {
-                try {
-                    token = token.replace('JWT ', '');
-                    const payload = jwt.verify(token, secret);
-                    client.userId = payload.id;
-                } catch (e) {
-                    console.warn(e);
-                    // TODO кикать пользовталея
-                }
-            });
 
             this.clients.push(client);
             console.log('>>>>> Socket.IO: a user connected');
@@ -38,13 +43,11 @@ class WS {
     }
 
     /**
-     * Определить подключенных клиентов причастных к заметке
-     * @param note
+     * Получить клиентов по массиву ID пользователей
+     * @param userIds
+     * @returns {Array}
      */
-    async getClientsNoteInvolved(note) {
-        // Определяем юзеров которые имеют отношение к этой заметке
-        const userIds = await note.getInvolvedUserIds();
-
+    getClientsByUserIds(userIds) {
         const results = [];
         for (const client of this.clients) {
             if (client.userId && userIds.includes(client.userId)) {
@@ -55,12 +58,75 @@ class WS {
     }
 
     /**
-     * Уведомить об обновлении заметки
+     * Уведомить об обновлении/создании заметки
      * @param note
+     * @param userIds
      */
-    async notifyNoteUpdate(note) {
-        for (const client of await this.getClientsNoteInvolved(note)) {
+    notifyNoteUpdate(note, userIds) {
+        for (const client of this.getClientsByUserIds(userIds)) {
             client.socket.emit('note:updated', { note: note.toIndexJSON() });
+        }
+    }
+
+    /**
+     * Уведомить о...
+     * @param note
+     * @param file
+     * @param userIds
+     */
+    notifyNoteFileUpdate(note, file, userIds) {
+        for (const client of this.getClientsByUserIds(userIds)) {
+            client.socket.emit('note:fileUpdated', { noteId: note._id, file: file.toIndexJSON() });
+        }
+    }
+
+    /**
+     * Уведомить о...
+     * @param fileId
+     * @param userIds
+     */
+    notifyNoteFileRemove(note, fileId, userIds) {
+        for (const client of this.getClientsByUserIds(userIds)) {
+            client.socket.emit('note:fileRemoved', { noteId: note._id, fileId });
+        }
+    }
+
+    /**
+     * Уведомить об удалении заметок
+     * @param noteId
+     * @param userIds
+     */
+    notifyNoteRemove(noteId, userIds) {
+        for (const client of this.getClientsByUserIds(userIds)) {
+            client.socket.emit('note:removed', { noteId });
+        }
+    }
+
+    /**
+     * Уведомить об обновлении/создании группы
+     * @param group
+     * @param users
+     */
+    async notifyGroupUpdate(group, users) {
+        const userIds = users.map(user => user._id.toString());
+        const usersMap = {};
+        users.forEach(user => {
+            usersMap[user._id.toString()] = user;
+        });
+
+        for (const client of this.getClientsByUserIds(userIds)) {
+            client.socket.emit('group:updated', { group: group.toIndexJSON(usersMap[client.userId]) });
+        }
+    }
+
+    /**
+     * Уведомить об удалении группы
+     * @param groupId
+     * @param userIds
+     */
+    notifyGroupRemove(groupId, userIds) {
+        for (const client of this.getClientsByUserIds(userIds)) {
+            client.socket.emit('group:removed', { groupId });
         }
     }
 }

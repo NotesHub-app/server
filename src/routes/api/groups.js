@@ -7,6 +7,7 @@ import { checkValidation } from '../../middlewares/validation';
 import Group from '../../models/Group';
 import { alreadyDoneResponse, forbiddenResponse, notFoundResponse } from '../../utils/response';
 import User from '../../models/User';
+import ws from '../../ws';
 
 const router = express.Router();
 
@@ -77,7 +78,9 @@ router.post(
         });
         await req.user.save();
 
-        res.status(201).json({ group: newGroup.toIndexJSON(req.user) });
+        await res.status(201).json({ group: newGroup.toIndexJSON(req.user) });
+
+        await newGroup.notifyUpdate();
     },
 );
 
@@ -108,7 +111,6 @@ router.patch(
 
         // Обновляем группы у пользователей
         for (const formUser of users) {
-            // console.log(formUser);
             const user = await User.findById(formUser.id);
             if (formUser.deleted) {
                 user.groups = [...user.groups].filter(i => i.group.toString() !== group._id.toString());
@@ -136,12 +138,14 @@ router.patch(
         );
         await group.save();
 
-        return res.json({ success: true });
+        await res.json({ success: true, updatedAt: group.updatedAt.getTime() });
+
+        await group.notifyUpdate();
     },
 );
 
 /**
- * удаление группы со всем содержимым
+ * Удаление группы со всем содержимым
  */
 router.delete('/:group', async (req, res) => {
     const { group } = req.params;
@@ -152,7 +156,9 @@ router.delete('/:group', async (req, res) => {
 
     await group.remove();
 
-    return res.json({ success: true });
+    await res.json({ success: true });
+
+    await group.notifyRemove();
 });
 
 /**

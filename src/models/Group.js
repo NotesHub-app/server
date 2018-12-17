@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import dayjs from 'dayjs';
 import { randomString } from '../utils/string';
 import User from './User';
+import ws from '../ws';
 
 const mongoSchema = new mongoose.Schema(
     {
@@ -28,10 +29,20 @@ const mongoSchema = new mongoose.Schema(
             },
         ],
     },
-    { timestamps: true },
+    { timestamps: true }
 );
 
 class GroupClass {
+    async notifyUpdate() {
+        const group = this;
+        await ws.notifyGroupUpdate(group, await group.getUsers());
+    }
+
+    async notifyRemove() {
+        const group = this;
+        ws.notifyGroupRemove(group._id.toString(), await group.getUserIds());
+    }
+
     /**
      * Проверка возможности делать правки/удаление
      * @param user
@@ -75,6 +86,7 @@ class GroupClass {
             id: this._id,
             title: this.title,
             myRole: role,
+            updatedAt: this.updatedAt.getTime(),
         };
     }
 
@@ -82,6 +94,11 @@ class GroupClass {
         const group = this;
 
         return await User.find({ groups: { $elemMatch: { group } } });
+    }
+
+    async getUserIds() {
+        const users = await this.getUsers();
+        return users.map(i => i._id.toString());
     }
 
     /**
@@ -95,7 +112,7 @@ class GroupClass {
         const resultUsers = [];
         users.forEach(({ groups, _id, email }) => {
             // Самого пользователя не заносим в массив
-            if (user._id.toString() === _id.toString()) {
+            if (user && user._id.toString() === _id.toString()) {
                 return;
             }
             const { role } = groups.find(i => i.group.toString() === this._id.toString());

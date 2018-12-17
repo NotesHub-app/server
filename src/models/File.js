@@ -56,6 +56,7 @@ class FileClass {
             size: this.size,
             mimeType: this.mimeType,
             downloadCode: this.downloadCode,
+            updatedAt: this.updatedAt.getTime(),
         };
     }
 }
