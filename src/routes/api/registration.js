@@ -3,7 +3,7 @@ import express from 'express';
 import User from '../../models/User';
 import { randomString } from '../../utils/string';
 import { checkValidation } from '../../middlewares/validation';
-import { notFoundResponse, validationErrorResponse } from '../../utils/response';
+import { notFoundResponse } from '../../utils/response';
 
 const router = express.Router();
 

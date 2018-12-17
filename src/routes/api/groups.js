@@ -7,7 +7,6 @@ import { checkValidation } from '../../middlewares/validation';
 import Group from '../../models/Group';
 import { alreadyDoneResponse, forbiddenResponse, notFoundResponse } from '../../utils/response';
 import User from '../../models/User';
-import ws from '../../ws';
 
 const router = express.Router();
 

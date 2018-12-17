@@ -1,9 +1,9 @@
 import request from 'supertest';
 import timekeeper from 'timekeeper';
+import dayjs from 'dayjs';
 import User from '../../../models/User';
 import app from '../../../app';
 import { resetDB } from '../../../utils/db';
-import dayjs from 'dayjs';
 
 const ROUTES = {
     login: '/api/auth/login',

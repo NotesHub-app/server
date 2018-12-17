@@ -1,8 +1,6 @@
 import mongoose from 'mongoose';
 import DiffMatchPatch from 'diff-match-patch';
 import * as _ from 'lodash';
-import Group from './Group';
-import bcrypt from 'bcryptjs';
 import ws from '../ws';
 
 /**
@@ -177,7 +175,7 @@ class NoteClass {
         const note = this;
 
         if (note.group) {
-            const group = await Group.findById(note.group);
+            const group = await this.model('Group').findById(note.group);
             const users = await group.getUsers();
             return users.map(i => i._id.toString());
         }

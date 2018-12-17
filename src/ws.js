@@ -1,7 +1,6 @@
 import socketIO from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { secret } from './config';
-import User from './models/User';
 
 class WS {
     clients = [];
@@ -30,7 +29,6 @@ class WS {
             };
 
             this.clients.push(client);
-            console.log('>>>>> Socket.IO: a user connected');
         });
 
         this.io.on('disconnect', socket => {
@@ -38,7 +36,6 @@ class WS {
             if (i > -1) {
                 this.clients.splice(i, 1);
             }
-            console.log('>>>>> Socket.IO: a user disconnected');
         });
     }
 
@@ -82,6 +79,7 @@ class WS {
 
     /**
      * Уведомить о...
+     * @param note
      * @param fileId
      * @param userIds
      */

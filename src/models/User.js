@@ -5,7 +5,6 @@ import jwt from 'jsonwebtoken';
 import dayjs from 'dayjs';
 import { secret } from '../config';
 import { randomString } from '../utils/string';
-import * as _ from 'lodash';
 
 const mongoSchema = new mongoose.Schema(
     {

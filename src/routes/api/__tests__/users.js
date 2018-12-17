@@ -1,7 +1,6 @@
 import request from 'supertest';
 import app from '../../../app';
 import User from '../../../models/User';
-import Group from '../../../models/Group';
 import { resetDB } from '../../../utils/db';
 
 describe('users', () => {

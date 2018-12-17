@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import dayjs from 'dayjs';
 import { randomString } from '../utils/string';
-import User from './User';
 import ws from '../ws';
 
 const mongoSchema = new mongoose.Schema(
@@ -93,7 +92,7 @@ class GroupClass {
     async getUsers() {
         const group = this;
 
-        return await User.find({ groups: { $elemMatch: { group } } });
+        return await this.model('User').find({ groups: { $elemMatch: { group } } });
     }
 
     async getUserIds() {
