@@ -3,7 +3,7 @@ import app from '../../../app';
 import Note from '../../../models/Note';
 import User from '../../../models/User';
 import Group from '../../../models/Group';
-import { resetDB } from '../../../utils/db';
+import { resetDB } from '../../../test/helpers';
 import { generateNote } from '../../../utils/fake';
 
 let author;

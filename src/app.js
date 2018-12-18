@@ -4,12 +4,16 @@ import cors from 'cors';
 import errorHandler from 'errorhandler';
 import morgan from 'morgan';
 import routes from './routes';
+import services from './services';
 
 // Инициализируем подключение к БД и модели
 import './db';
 import './models';
 
 const app = express();
+
+// Добавляем сервисы в locals
+app.locals = { ...app.locals, ...services };
 
 // Отключаем в хедерах сообщение о том что используется Express
 app.disable('x-powered-by');
@@ -28,7 +32,7 @@ app.use(
         limit: '50mb',
         extended: true,
         parameterLimit: 50000,
-    }),
+    })
 );
 app.use(bodyParser.json({ limit: '50mb' }));
 

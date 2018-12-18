@@ -25,7 +25,7 @@
             "env": {
                 "NODE_ENV": "production",
                 "MONGO_URL": "mongodb://127.0.0.1:27017/noteshub",
-                "PORT": 23000
+                "PORT": 4000
             }
         },
         "test": {
@@ -61,11 +61,13 @@
         "cors": "^2.8.5",
         "dayjs": "^1.7.7",
         "diff-match-patch": "^1.0.4",
+        "dotenv": "^6.2.0",
         "errorhandler": "^1.5.0",
         "express": "^4.16.4",
         "express-validator": "^5.3.0",
         "jsonwebtoken": "^8.4.0",
         "lodash": "^4.17.11",
+        "mailgun-js": "^0.22.0",
         "mongodb": "^3.1.10",
         "mongoose": "^5.3.13",
         "mongoose-unique-validator": "^2.0.2",

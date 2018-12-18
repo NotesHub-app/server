@@ -32,10 +32,13 @@ router.post(
                 // По мерам безопасности мы не должны говорить, что такой емейл уже есть в системе
                 // Делаем простой ответ как будто всё идет по плану
                 if (process.env.NODE_ENV === 'production') {
-                    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    // TODO возможно здесь следует отправить емейл на почту пользователю что он уже зареген и
-                    //  предложить восстановить пароль
-                    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    req.app.locals.mailService.sendMail({
+                        to: email,
+                        subject: 'Подтверждение регистрации',
+                        text:
+                            'Внимание! Вы уже были зарегистрированы ранее! В случае если вы не помните ' +
+                            'регистрационные данны - используйте форму восстановления пароля.',
+                    });
                 }
 
                 return res.json({ success: true });
@@ -43,6 +46,7 @@ router.post(
 
             // Обновляем код подтверждения
             user.registration.code = randomString(20);
+            await user.save();
         } else {
             user = new User({
                 email,
@@ -59,13 +63,15 @@ router.post(
             console.info(`:::: REGISTRATION CODE FOR ${user.email}:    ${user.registration.code}`);
         }
         if (process.env.NODE_ENV === 'production') {
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO отправить емейл с кодом на емейл пользователя
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            req.app.locals.mailService.sendMail({
+                to: email,
+                subject: 'Подтверждение регистрации',
+                text: `Код подтверждения: ${user.registration.code}`,
+            });
         }
 
         return res.json({ success: true });
-    },
+    }
 );
 
 /**
@@ -96,7 +102,7 @@ router.post(
         await user.save();
 
         return res.json({ success: true });
-    },
+    }
 );
 
 export default router;

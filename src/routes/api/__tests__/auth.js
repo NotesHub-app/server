@@ -3,7 +3,7 @@ import timekeeper from 'timekeeper';
 import dayjs from 'dayjs';
 import User from '../../../models/User';
 import app from '../../../app';
-import { resetDB } from '../../../utils/db';
+import { resetDB } from '../../../test/helpers';
 
 const ROUTES = {
     login: '/api/auth/login',

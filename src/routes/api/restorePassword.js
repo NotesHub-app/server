@@ -33,18 +33,21 @@ router.post(
         user.generateRestorePasswordCode();
         await user.save();
 
+        const { code } = _.last(user.restorePasswordCodes);
+
         if (process.env.NODE_ENV === 'development') {
-            const { code } = _.last(user.restorePasswordCodes);
             console.info(`:::: RESTORE PASSWORD CODE FOR ${user.email}:    ${code}`);
         }
         if (process.env.NODE_ENV === 'production') {
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO отпавить код на email пользователя
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            req.app.locals.mailService.sendMail({
+                to: email,
+                subject: 'Восстановление пароля',
+                text: `Код для восстановления пароля: ${code}`,
+            });
         }
 
         return res.json({ success: true });
-    },
+    }
 );
 
 /**
@@ -79,7 +82,7 @@ router.post(
         await user.save();
 
         return res.json({ success: true });
-    },
+    }
 );
 
 export default router;

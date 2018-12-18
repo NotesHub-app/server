@@ -3,7 +3,7 @@ import User from '../models/User';
 import Note from '../models/Note';
 import Group from '../models/Group';
 import { generateNote } from '../utils/fake';
-import { resetDB } from '../utils/db';
+import { resetDB } from '../test/helpers';
 
 let nonceValue = 0;
 const getNonce = () => {

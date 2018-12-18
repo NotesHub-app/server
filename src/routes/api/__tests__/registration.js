@@ -1,7 +1,7 @@
 import request from 'supertest';
 import app from '../../../app';
 import User from '../../../models/User';
-import { resetDB } from '../../../utils/db';
+import { resetDB } from '../../../test/helpers';
 
 const newUser = { email: 'new@email.com', password: 'megapassword' };
 let verificationCode = '';

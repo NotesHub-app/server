@@ -1,4 +1,4 @@
-import { resetDB } from '../../utils/db';
+import { resetDB } from '../../test/helpers';
 import Note from '../Note';
 import User from '../User';
 import { generateNote } from '../../utils/fake';
@@ -109,4 +109,17 @@ describe('NoteModel', () => {
             expect(await note.checkAllowToEdit(anotherUser)).toBe(false);
         });
     });
+
+
+    test('toIndexJSON', async () => {
+        const author = await new User({ email: 'user@mail.com' }).save();
+        let note = await new Note({ ...generateNote(), title: 'note1', owner: author }).save();
+
+        note = await Note.findById(note._id);
+
+        expect(await note.toIndexJSON().title).toBe(note.title);
+        expect(await note.toIndexJSON().content).toBeUndefined();
+    });
+
+
 });

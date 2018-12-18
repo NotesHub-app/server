@@ -35,7 +35,7 @@ router.param('group', async (req, res, next, groupId) => {
  */
 router.get('/', async (req, res) => {
     // Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
-    const groups = await Group.find({ _id: { $in: req.user.groupIds } });
+    const groups = await Group.find({ _id: { $in: req.user.groupIds } }).select('-inviteCodes');
 
     res.status(200).json({ groups: groups.map(group => group.toIndexJSON(req.user)) });
 });
@@ -80,7 +80,7 @@ router.post(
         await res.status(201).json({ group: newGroup.toIndexJSON(req.user) });
 
         await newGroup.notifyUpdate();
-    },
+    }
 );
 
 /**
@@ -133,14 +133,14 @@ router.patch(
                 if (!_.isUndefined(value)) {
                     group[field] = value;
                 }
-            },
+            }
         );
         await group.save();
 
         await res.json({ success: true, updatedAt: group.updatedAt.getTime() });
 
         await group.notifyUpdate();
-    },
+    }
 );
 
 /**
@@ -183,7 +183,7 @@ router.get(
         await group.save();
 
         return res.json({ ...codeObj, groupId: group._id.toString() });
-    },
+    }
 );
 
 /**
@@ -205,7 +205,7 @@ router.post(
                 // Код совпадает
                 i.code === code &&
                 // Код всё еще не просрочен
-                dayjs().isBefore(dayjs(i.expireDate)),
+                dayjs().isBefore(dayjs(i.expireDate))
         );
         if (!inviteCode) {
             return forbiddenResponse(res);
@@ -221,7 +221,7 @@ router.post(
         await req.user.save();
 
         return res.json({ success: true });
-    },
+    }
 );
 
 export default router;

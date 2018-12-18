@@ -46,7 +46,7 @@ export const fileParamFunction = async (req, res, next, fileId) => {
             { $or: [{ owner: user._id }, { group: { $in: user.groupIds } }] },
             { files: file._id },
         ],
-    });
+    }).select(['_id']);
     if (!note) {
         return forbiddenResponse(res);
     }
@@ -235,9 +235,10 @@ router.delete(
         }
 
         // А потом удаляем
-        for (const [note, file] of files) {
+        for (const [fileNote, file] of files) {
+            // Удаляем по одному чтоб задействовать прослйку pre('remove')
             await file.remove();
-            await note.notifyFileRemove(file._id);
+            fileNote.notifyFileRemove(file._id).catch(e => console.error(e));
         }
 
         await res.json({ success: true });

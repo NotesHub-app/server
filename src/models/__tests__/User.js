@@ -1,4 +1,4 @@
-import { resetDB } from '../../utils/db';
+import { resetDB } from '../../test/helpers';
 import Group from '../Group';
 import User from '../User';
 

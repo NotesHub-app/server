@@ -57,24 +57,64 @@ const mongoSchema = new mongoose.Schema(
 );
 
 class NoteClass {
+    /**
+     * Уведомить об создании/обновлении заметки
+     * @returns {Promise<void>}
+     */
     async notifyUpdate() {
         const note = this;
         ws.notifyNoteUpdate(note, await note.getInvolvedUserIds());
     }
 
+    /**
+     * Уведомить об создании/обновлении файла заметки
+     * @param file
+     * @returns {Promise<void>}
+     */
     async notifyFileUpdate(file) {
         const note = this;
         ws.notifyNoteFileUpdate(note, file, await note.getInvolvedUserIds());
     }
 
+    /**
+     * Уведомить об удалении файла заметки
+     * @param fileId
+     * @returns {Promise<void>}
+     */
     async notifyFileRemove(fileId) {
         const note = this;
         ws.notifyNoteFileRemove(note, fileId, await note.getInvolvedUserIds());
     }
 
+    /**
+     * Уведомить об удалении заметки
+     * @returns {Promise<void>}
+     */
     async notifyRemove() {
         const note = this;
         ws.notifyNoteRemove(note._id.toString(), await note.getInvolvedUserIds());
+    }
+
+    /**
+     * Query-helper для получения заметки с проверкой принадлежности пользователя к ней
+     * @param noteId
+     * @param user
+     * @returns {*}
+     */
+    static findUserNote(noteId, user) {
+        return this.findOne({
+            $and: [
+                { _id: noteId },
+                {
+                    $or: [
+                        // Владельцем должен быть пользователь
+                        { owner: user },
+                        // Или группа в которой он состоит
+                        { group: { $in: user.groupIds } },
+                    ],
+                },
+            ],
+        });
     }
 
     /**
@@ -111,6 +151,11 @@ class NoteClass {
         }
     }
 
+    /**
+     * Получения массива ID-ов всех вложенных дочерних заметок
+     * @param note
+     * @returns {Promise<*>}
+     */
     static async getChildrenIdsOf(note) {
         const result = await this.aggregate([
             {

@@ -16,19 +16,7 @@ router.param('note', async (req, res, next, noteId) => {
 
     const { user } = req;
 
-    const note = await Note.findOne({
-        $and: [
-            { _id: noteId },
-            {
-                $or: [
-                    // Владельцем должен быть пользователь
-                    { owner: user },
-                    // Или группа в которой он состоит
-                    { group: { $in: user.groupIds } },
-                ],
-            },
-        ],
-    });
+    const note = await Note.findUserNote(noteId, user);
 
     if (!note) {
         return notFoundResponse(res);
@@ -56,7 +44,9 @@ const allowToEditNote = (req, res, next) => {
  */
 router.get('/', async (req, res) => {
     // Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
-    const notes = await Note.find({ $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] });
+    const notes = await Note.find({ $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] }).select(
+        '-content -files'
+    );
 
     res.status(200).json({ notes: notes.map(note => note.toIndexJSON()) });
 });
@@ -111,7 +101,7 @@ router.post(
                         ],
                     },
                 ],
-            });
+            }).select(['_id', 'group']);
 
             if (
                 // Если роодиельской заметки вообще нет
@@ -183,7 +173,7 @@ router.patch(
 
         // Если меняем родителя - должны быть уверены, что владельцы родителя такиеже
         if (parentId) {
-            const parentNote = await Note.findById(parentId);
+            const parentNote = await Note.findById(parentId).select(['_id', 'owner', 'group']);
 
             const prevParent = note.parent;
             if (!prevParent) {

@@ -6,7 +6,7 @@ import Note from '../../../models/Note';
 import User from '../../../models/User';
 import File from '../../../models/File';
 import Group from '../../../models/Group';
-import { resetDB } from '../../../utils/db';
+import { resetDB } from '../../../test/helpers';
 import { generateNote } from '../../../utils/fake';
 
 let author;
