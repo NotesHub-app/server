@@ -132,8 +132,7 @@ describe('groups', () => {
             const author = await new User({ email: 'user@email.com', groups: [{ group, role: 0 }] }).save();
 
             const response = await request(app)
-                .get(`/api/groups/${group._id}/invite`)
-                .send({ role: 1 })
+                .get(`/api/groups/${group._id}/invite?role=1`)
                 .set('Authorization', `JWT ${author.generateJWT()}`);
 
             expect(response.statusCode).toBe(200);
@@ -147,8 +146,7 @@ describe('groups', () => {
             const author = await new User({ email: 'user@email.com', groups: [{ group, role: 0 }] }).save();
 
             const response = await request(app)
-                .get(`/api/groups/${anotherGroup._id}/invite`)
-                .send({ role: 1 })
+                .get(`/api/groups/${anotherGroup._id}/invite?role=1`)
                 .set('Authorization', `JWT ${author.generateJWT()}`);
 
             expect(response.statusCode).toBe(403);
@@ -159,8 +157,7 @@ describe('groups', () => {
             const author = await new User({ email: 'user@email.com', groups: [{ group, role: 0 }] }).save();
 
             const response = await request(app)
-                .get(`/api/groups/${group._id}/invite`)
-                .send({ role: 0 })
+                .get(`/api/groups/${group._id}/invite?role=0`)
                 .set('Authorization', `JWT ${author.generateJWT()}`);
 
             expect(response.statusCode).toBe(422);
@@ -186,8 +183,7 @@ describe('groups', () => {
 
         test('входим в группу по инвайт ссылке', async () => {
             const responseInvite = await request(app)
-                .get(`/api/groups/${group._id}/invite`)
-                .send({ role: 1 })
+                .get(`/api/groups/${group._id}/invite?role=1`)
                 .set('Authorization', `JWT ${author.generateJWT()}`);
 
             const { code, groupId } = responseInvite.body;

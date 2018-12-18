@@ -172,7 +172,7 @@ router.get(
     ],
     async (req, res) => {
         const { group } = req.params;
-        const { role } = req.body;
+        const role = Number(req.query.role);
 
         // Пользователь должен быть админом
         if (!req.user.groups.some(i => i.group._id.toString() === group._id.toString() && i.role === 0)) {
