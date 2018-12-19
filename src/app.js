@@ -3,12 +3,16 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import errorHandler from 'errorhandler';
 import morgan from 'morgan';
+import bluebird from 'bluebird';
 import routes from './routes';
 import services from './services';
 
 // Инициализируем подключение к БД и модели
 import './db';
 import './models';
+
+// Делаем bluebird глобальным промисом
+global.Promise = bluebird;
 
 const app = express();
 
@@ -32,7 +36,7 @@ app.use(
         limit: '50mb',
         extended: true,
         parameterLimit: 50000,
-    })
+    }),
 );
 app.use(bodyParser.json({ limit: '50mb' }));
 

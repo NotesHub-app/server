@@ -45,7 +45,7 @@ const mongoSchema = new mongoose.Schema(
         refreshTokenCode: String,
         uiSettings: Object, // TODO определить фиксированные поля
     },
-    { timestamps: true },
+    { timestamps: true }
 );
 
 mongoSchema.plugin(uniqueValidator, { message: 'is already taken.' });
@@ -68,6 +68,10 @@ class UserClass {
         return this.groups.map(groupItem => groupItem.group._id.toString());
     }
 
+    /**
+     * Сверка пароля с криптованным
+     * @param candidatePassword
+     */
     async comparePassword(candidatePassword) {
         return bcrypt.compare(candidatePassword, this.password);
     }
@@ -87,7 +91,7 @@ class UserClass {
                 ...additionalData,
             },
             secret,
-            { expiresIn },
+            { expiresIn }
         );
     }
 
@@ -103,6 +107,9 @@ class UserClass {
         });
     }
 
+    /**
+     * Генерация кода для рефреш-токена
+     */
     generateRefreshTokenCode() {
         this.refreshTokenCode = randomString(10);
     }
@@ -127,6 +134,10 @@ class UserClass {
         };
     }
 
+    /**
+     * Обноалвение настроек UI (merge-ом)
+     * @param uiSettings
+     */
     updateUiSetting(uiSettings) {
         const resultSettings = { ...this.uiSettings };
         for (const [param, value] of Object.entries(uiSettings)) {
@@ -137,7 +148,6 @@ class UserClass {
 
     /**
      * Сгернерировать ответ для получние полного объекта пользователя
-     * @returns {{fileToken: *, email: *, token: string, refreshToken: string}}
      */
     toFullUserJSON() {
         return {

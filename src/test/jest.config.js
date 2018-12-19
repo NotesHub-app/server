@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
     rootDir: process.cwd(),
-    // testRegex: "__tests__/(Note).js",
+    testRegex: "__tests__/(Note).js",
     // forceExit: true,
 
     globalSetup: path.join(__dirname, 'setup.js'),

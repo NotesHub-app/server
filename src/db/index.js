@@ -9,7 +9,7 @@ if (process.env.NODE_ENV !== 'test') {
         })
         .on('error', error => {
             console.error(`[DB] Error in MongoDb connection: ${error}`);
-            mongoose.disconnect();
+            throw new Error(`[DB] Unable to connect to DB!`);
         })
         .on('connected', () => {
             console.info('[DB] MongoDB connected!');

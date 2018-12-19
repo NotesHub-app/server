@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import DiffMatchPatch from 'diff-match-patch';
 import * as _ from 'lodash';
 import ws from '../ws';
+import bcrypt from 'bcryptjs';
 
 /**
  * Сохраняет предудущее состояние поля
@@ -55,6 +56,16 @@ const mongoSchema = new mongoose.Schema(
     },
     { timestamps: true }
 );
+
+mongoSchema.pre('remove', async function() {
+    const note = this;
+
+    // Удаляем все файлы заметки
+    await note.populate('files').execPopulate();
+    for (const file of note.files) {
+        await file.remove();
+    }
+});
 
 class NoteClass {
     /**

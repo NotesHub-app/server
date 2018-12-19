@@ -3,6 +3,7 @@ import Note from '../Note';
 import User from '../User';
 import { generateNote } from '../../utils/fake';
 import Group from '../Group';
+import File from '../File';
 
 describe('NoteModel', () => {
     afterEach(async () => {
@@ -110,8 +111,7 @@ describe('NoteModel', () => {
         });
     });
 
-
-    test('toIndexJSON', async () => {
+    test('toIndexJSON method', async () => {
         const author = await new User({ email: 'user@mail.com' }).save();
         let note = await new Note({ ...generateNote(), title: 'note1', owner: author }).save();
 
@@ -121,5 +121,16 @@ describe('NoteModel', () => {
         expect(await note.toIndexJSON().content).toBeUndefined();
     });
 
+    describe('pre(remove)', async () => {
+        test('файлы заметки должны удалиться', async () => {
+            const file = await new File({ fileName: 'foo.txt' }).save();
+            let note = await new Note({ ...generateNote(), title: 'note1', files: [file] }).save();
 
+            note = await Note.findById(note._id);
+
+            await note.remove();
+
+            expect(await File.findById(file._id)).toBe(null);
+        });
+    });
 });
