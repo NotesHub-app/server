@@ -16,7 +16,8 @@ describe('users', () => {
             const response = await request(app)
                 .patch('/api/users/me')
                 .send({
-                    password: 'foobar321',
+                    oldPassword: 'qwerty123',
+                    newPassword: 'foobar321',
                 })
                 .set('Authorization', `JWT ${user.generateJWT()}`);
 
@@ -25,6 +26,35 @@ describe('users', () => {
             const userAfterUpdate = await User.findById(user._id);
 
             expect(userAfterUpdate.password).not.toBe(user.password);
+        });
+
+        test('обновление пароля с неверным старым', async () => {
+            let user = await new User({ email: 'user@email.com', password: 'qwerty123' }).save();
+            user = await User.findById(user._id);
+
+            const response = await request(app)
+                .patch('/api/users/me')
+                .send({
+                    oldPassword: 'NOT_OLD_PASSWORD',
+                    newPassword: 'foobar321',
+                })
+                .set('Authorization', `JWT ${user.generateJWT()}`);
+
+            expect(response.statusCode).toBe(422);
+        });
+
+        test('обновление пароля без старого', async () => {
+            let user = await new User({ email: 'user@email.com', password: 'qwerty123' }).save();
+            user = await User.findById(user._id);
+
+            const response = await request(app)
+                .patch('/api/users/me')
+                .send({
+                    newPassword: 'foobar321',
+                })
+                .set('Authorization', `JWT ${user.generateJWT()}`);
+
+            expect(response.statusCode).toBe(422);
         });
 
         test('обновление uiSettings', async () => {
