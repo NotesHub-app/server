@@ -1,5 +1,6 @@
 import { check, validationResult } from 'express-validator/check';
 import express from 'express';
+import request from 'superagent';
 import User from '../../models/User';
 import { randomString } from '../../utils/string';
 import { checkValidation } from '../../middlewares/validation';
@@ -16,18 +17,37 @@ router.post(
         // Валидация полей
         check('email')
             .isEmail()
-            .withMessage('Email адрес имеет не верный формат'),
+            .withMessage('Email адрес имеет неверный формат'),
+        check('userName')
+            .isLength({ min: 3 })
+            .withMessage('Имя должно содержать минимум 3 символа'),
         check('password')
             .isLength({ min: 8 })
             .withMessage('Пароль должен содержать минимум 8 символов'),
         checkValidation(),
     ],
     async (req, res) => {
-        const { email, password } = req.body;
+        const { email, userName, password, recaptchaToken } = req.body;
+
+        if (process.env.NODE_ENV === 'production') {
+            // Проверяем результат рекапчи
+            const {
+                body: { success, score },
+            } = await request
+                .post('https://www.google.com/recaptcha/api/siteverify')
+                .type('form')
+                .send({ secret: process.env.GOOGLE_RECAPTCHA_SECRET_KEY, response: recaptchaToken })
+                .set('accept', 'json');
+
+            // Если проверка капчи не удалась или низкий рейтинг
+            if (!success || score < 0.5) {
+                return res.status(403).json({ error: 'Невозможно произвести регистрацию.' });
+            }
+        }
 
         let user = await User.findOne({ email });
         if (user) {
-            // Если пользователь с таким емейлов уже зареген
+            // Если пользователь с таким емейлом уже зареген
             if (user.registration.verified) {
                 // По мерам безопасности мы не должны говорить, что такой емейл уже есть в системе
                 // Делаем простой ответ как будто всё идет по плану
@@ -50,6 +70,7 @@ router.post(
         } else {
             user = new User({
                 email,
+                userName,
                 password,
                 registration: {
                     verified: false,

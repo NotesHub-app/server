@@ -11,6 +11,7 @@ const ROUTES = {
 
 const validUser = {
     email: 'valid@email.com',
+    userName: 'Valid User',
     password: 'good_password',
     registration: {
         verified: true,
@@ -53,6 +54,7 @@ describe('auth', () => {
 
             expect(response.statusCode).toBe(200);
             expect(response.body.email).toBe(validUser.email);
+            expect(response.body.userName).toBe(validUser.userName);
             expect(response.body.token.length).toBeGreaterThan(20);
 
             token = response.body.token;

@@ -39,6 +39,7 @@ export default async function seed() {
         // Создаем пользователя
         const user = await new User({
             email: 'admin@email.com',
+            userName: 'The Admin',
             password: 'password',
             registration: { verified: true },
             groups: [{ group, role: 0 }],
@@ -51,8 +52,9 @@ export default async function seed() {
             await new User({
                 email: `user${i}@email.com`,
                 password: 'password',
+                userName: `User${i}`,
                 registration: { verified: true },
-                groups: [{ group, role: _.random(0,2) }],
+                groups: [{ group, role: _.random(0, 2) }],
             }).save();
         }
 

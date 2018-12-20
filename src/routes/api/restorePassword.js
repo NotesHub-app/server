@@ -16,7 +16,7 @@ router.post(
         // Валидация параметров
         check('email')
             .isEmail()
-            .withMessage('Email адрес имеет не верный формат'),
+            .withMessage('Email адрес имеет неверный формат'),
         checkValidation(),
     ],
     async (req, res) => {

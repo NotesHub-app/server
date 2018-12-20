@@ -11,10 +11,10 @@ const mongoSchema = new mongoose.Schema(
         email: {
             type: String,
             lowercase: true,
-            unique: true,
-            required: [true, "can't be blank"],
-            match: [/\S+@\S+\.\S+/, 'is invalid'],
             index: true,
+        },
+        userName: {
+            type: String,
         },
         password: String,
         registration: {
@@ -44,6 +44,12 @@ const mongoSchema = new mongoose.Schema(
         ],
         refreshTokenCode: String,
         uiSettings: Object, // TODO определить фиксированные поля
+
+        githubId: Number,
+        githubInfo: Object,
+
+        googleId: Number,
+        googleInfo: Object,
     },
     { timestamps: true }
 );
@@ -121,6 +127,7 @@ class UserClass {
     toAuthJSON() {
         return {
             email: this.email,
+            userName: this.userName,
             token: `JWT ${this.generateJWT()}`,
             fileToken: this.generateJWT({
                 type: 'file',

@@ -14,6 +14,10 @@ router.patch(
         requireAuth,
 
         // Валидация параметров
+        check('userName')
+            .optional()
+            .isLength({ min: 3 })
+            .withMessage('Имя должно содержать минимум 3 символа'),
         check('uiSettings').optional(),
         check('oldPassword')
             .optional()
@@ -36,16 +40,17 @@ router.patch(
     ],
     async (req, res) => {
         const { user } = req;
-        const { uiSettings, oldPassword, newPassword } = req.body;
+        const { uiSettings, userName, newPassword } = req.body;
 
         if (uiSettings) {
             user.updateUiSetting(uiSettings);
         }
 
         if (newPassword) {
-            if (!oldPassword) {
-            }
             user.password = newPassword;
+        }
+        if (userName) {
+            user.userName = userName;
         }
 
         await user.save();

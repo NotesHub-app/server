@@ -13,6 +13,7 @@ module.exports = {
             {
                 allow: [
                     '_id',
+                    '_json',
                     '_previous',
                     '__MONGO_URI__',
                     '__MONGO_DB_NAME__',

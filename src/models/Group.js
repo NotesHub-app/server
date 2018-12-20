@@ -109,17 +109,28 @@ class GroupClass {
         const users = await this.getUsers();
 
         const resultUsers = [];
-        users.forEach(({ groups, _id, email }) => {
+        users.forEach(({ groups, _id, email, userName, githubId, githubInfo, googleId, googleInfo }) => {
             // Самого пользователя не заносим в массив
             if (user && user._id.toString() === _id.toString()) {
                 return;
             }
             const { role } = groups.find(i => i.group.toString() === this._id.toString());
-            resultUsers.push({
+            const resultUser = {
                 id: _id,
-                email,
+                userName,
                 role,
-            });
+            };
+            if (email) {
+                resultUser.email = email;
+            }
+            if (githubId) {
+                resultUser.githubUrl = githubInfo.url;
+            }
+            if (googleId) {
+                resultUser.googleUrl = googleInfo.url;
+            }
+
+            resultUsers.push(resultUser);
         });
 
         return {

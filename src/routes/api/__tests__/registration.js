@@ -3,7 +3,7 @@ import app from '../../../app';
 import User from '../../../models/User';
 import { resetDB } from '../../../test/helpers';
 
-const newUser = { email: 'new@email.com', password: 'megapassword' };
+const newUser = { email: 'new@email.com', userName: 'New User', password: 'megapassword' };
 let verificationCode = '';
 
 describe('registration', () => {

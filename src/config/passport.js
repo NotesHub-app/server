@@ -1,6 +1,8 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
+import { Strategy as GitHubStrategy } from 'passport-github';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '../models/User';
 import { secret } from './index';
 
@@ -104,3 +106,70 @@ const jwtFileStrategy = new JwtStrategy(
 );
 jwtFileStrategy.name = 'jwt-file';
 passport.use(jwtFileStrategy);
+
+// Стратегия github
+const githubStrategy = new GitHubStrategy(
+    {
+        clientID: process.env.GITHUB_CLIENT_ID,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET,
+        callbackURL: 'http://localhost:3000/callback/github',
+        failureRedirect: 'http://localhost:3000/login?status=failed',
+    },
+    async (accessToken, refreshToken, profile, done) => {
+        try {
+            let user = await User.findOne({ githubId: profile.id });
+            if (!user) {
+                user = new User({
+                    githubId: profile.id,
+                    userName: profile.displayName,
+                    githubInfo: profile._json,
+                    registration: {
+                        verified: true,
+                    },
+                });
+                await user.save();
+            }
+
+            done(null, user);
+        } catch (err) {
+            return done(err, false);
+        }
+    }
+);
+githubStrategy.name = 'github';
+passport.use(githubStrategy);
+
+// Стратегия google
+const googleStrategy = new GoogleStrategy(
+    {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: 'http://localhost:3000/callback/google',
+        scope: ['profile'],
+        failureRedirect: 'http://localhost:3000/login?status=failed',
+    },
+    async (accessToken, refreshToken, profile, done) => {
+        console.log(profile);
+
+        try {
+            let user = await User.findOne({ googleId: profile.id });
+            if (!user) {
+                user = new User({
+                    googleId: profile.id,
+                    userName: profile.displayName,
+                    googleInfo: profile._json,
+                    registration: {
+                        verified: true,
+                    },
+                });
+                await user.save();
+            }
+
+            done(null, user);
+        } catch (err) {
+            return done(err, false);
+        }
+    }
+);
+googleStrategy.name = 'google';
+passport.use(googleStrategy);
