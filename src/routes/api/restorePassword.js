@@ -3,7 +3,7 @@ import express from 'express';
 import * as _ from 'lodash';
 import { checkValidation } from '../../middlewares/validation';
 import User from '../../models/User';
-import { notFoundResponse } from '../../utils/response';
+import { notFoundResponse, validationErrorResponse } from '../../utils/response';
 
 const router = express.Router();
 
@@ -75,7 +75,13 @@ router.post(
         });
 
         if (!user) {
-            return notFoundResponse(res);
+            return validationErrorResponse(res,[
+                {
+                    location: 'body',
+                    msg: 'Неверный код',
+                    param: 'code',
+                },
+            ]);
         }
 
         user.password = password;

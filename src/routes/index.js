@@ -9,6 +9,7 @@ import restorePasswordApiRouter from './api/restorePassword';
 import usersApiRouter from './api/users';
 import directDownloadApiRouter from './api/directDownload';
 import { requireAuth, requireFileAuth } from '../middlewares/auth';
+import { serverConfiguration } from '../config';
 
 export default app => {
     // Инициализируем API роуты
@@ -22,6 +23,11 @@ export default app => {
     apiRouter.use('/groups', [requireAuth], groupsApiRouter);
     apiRouter.use('/users', [requireAuth], usersApiRouter);
     apiRouter.use('/directDownload', [requireFileAuth], directDownloadApiRouter);
+
+    // Получение настроек сервера
+    apiRouter.get('/serverConfiguration', (req, res) => {
+        res.json(serverConfiguration);
+    });
 
     app.use('/api', apiRouter);
 

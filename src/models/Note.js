@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 import DiffMatchPatch from 'diff-match-patch';
 import * as _ from 'lodash';
 import ws from '../ws';
-import bcrypt from 'bcryptjs';
 
 /**
  * Сохраняет предудущее состояние поля
@@ -70,40 +69,42 @@ mongoSchema.pre('remove', async function() {
 class NoteClass {
     /**
      * Уведомить об создании/обновлении заметки
-     * @returns {Promise<void>}
+     * @param wsClientId
      */
-    async notifyUpdate() {
+    async notifyUpdate(wsClientId) {
         const note = this;
-        ws.notifyNoteUpdate(note, await note.getInvolvedUserIds());
+        ws.notifyNoteUpdate(note, await note.getInvolvedUserIds(), wsClientId);
     }
 
     /**
      * Уведомить об создании/обновлении файла заметки
      * @param file
+     * @param wsClientId
      * @returns {Promise<void>}
      */
-    async notifyFileUpdate(file) {
+    async notifyFileUpdate(file, wsClientId) {
         const note = this;
-        ws.notifyNoteFileUpdate(note, file, await note.getInvolvedUserIds());
+        ws.notifyNoteFileUpdate(note, file, await note.getInvolvedUserIds(), wsClientId);
     }
 
     /**
      * Уведомить об удалении файла заметки
      * @param fileId
+     * @param wsClientId
      * @returns {Promise<void>}
      */
-    async notifyFileRemove(fileId) {
+    async notifyFileRemove(fileId, wsClientId) {
         const note = this;
-        ws.notifyNoteFileRemove(note, fileId, await note.getInvolvedUserIds());
+        ws.notifyNoteFileRemove(note, fileId, await note.getInvolvedUserIds(), wsClientId);
     }
 
     /**
      * Уведомить об удалении заметки
-     * @returns {Promise<void>}
+     * @param wsClientId
      */
-    async notifyRemove() {
+    async notifyRemove(wsClientId) {
         const note = this;
-        ws.notifyNoteRemove(note._id.toString(), await note.getInvolvedUserIds());
+        ws.notifyNoteRemove(note._id.toString(), await note.getInvolvedUserIds(), wsClientId);
     }
 
     /**

@@ -175,7 +175,7 @@ router.post('/:file/upload', [allowToEditFile, fileUpload], async (req, res) => 
 
     await res.json({ file: file.toIndexJSON() });
 
-    await fileNote.notifyFileUpdate(file);
+    await fileNote.notifyFileUpdate(file, req.headers.wsclientid);
 });
 
 /**
@@ -238,7 +238,7 @@ router.delete(
         for (const [fileNote, file] of files) {
             // Удаляем по одному чтоб задействовать прослйку pre('remove')
             await file.remove();
-            fileNote.notifyFileRemove(file._id).catch(e => console.error(e));
+            fileNote.notifyFileRemove(file._id, req.headers.wsclientid).catch(e => console.error(e));
         }
 
         await res.json({ success: true });

@@ -34,7 +34,7 @@ describe('auth', () => {
     describe('[POST /api/auth/login]', () => {
         test(' без параметров', async () => {
             const response = await request(app).post(ROUTES.login);
-            expect(response.statusCode).toBe(400);
+            expect(response.statusCode).toBe(422);
         });
 
         test(' неверная учетка', async () => {

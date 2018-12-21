@@ -1,7 +1,8 @@
 import express from 'express';
+import { check } from 'express-validator/check';
 import { requireGithubAuth, requireGoogleAuth, requireLogin, requireRefreshAuth } from '../../middlewares/auth';
-
 import { randomString } from '../../utils/string';
+import { checkValidation } from '../../middlewares/validation';
 
 const router = express.Router();
 
@@ -15,7 +16,24 @@ const loginMethod = async (req, res) => {
 /**
  * Авторизация
  */
-router.post('/login', requireLogin, loginMethod);
+router.post(
+    '/login',
+    [
+        // Валидация параметров
+        check('email')
+            .not().isEmpty()
+            .withMessage('Требуется указать email'),
+
+        check('password')
+            .not().isEmpty()
+            .withMessage('Требуется указать пароль'),
+
+        checkValidation(),
+
+        requireLogin,
+    ],
+    loginMethod,
+);
 
 /**
  * Обновление токена

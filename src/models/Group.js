@@ -32,14 +32,14 @@ const mongoSchema = new mongoose.Schema(
 );
 
 class GroupClass {
-    async notifyUpdate() {
+    async notifyUpdate(wsClientId) {
         const group = this;
-        await ws.notifyGroupUpdate(group, await group.getUsers());
+        await ws.notifyGroupUpdate(group, await group.getUsers(), wsClientId);
     }
 
-    async notifyRemove() {
+    async notifyRemove(wsClientId) {
         const group = this;
-        ws.notifyGroupRemove(group._id.toString(), await group.getUserIds());
+        ws.notifyGroupRemove(group._id.toString(), await group.getUserIds(), wsClientId);
     }
 
     /**

@@ -79,7 +79,7 @@ router.post(
 
         await res.status(201).json({ group: newGroup.toIndexJSON(req.user) });
 
-        await newGroup.notifyUpdate();
+        await newGroup.notifyUpdate(req.headers.wsclientid);
     }
 );
 
@@ -137,9 +137,9 @@ router.patch(
         );
         await group.save();
 
-        await res.json({ success: true, updatedAt: group.updatedAt.getTime() });
+        await res.json({ success: true });
 
-        await group.notifyUpdate();
+        await group.notifyUpdate(req.headers.wsclientid);
     }
 );
 
@@ -157,7 +157,7 @@ router.delete('/:group', async (req, res) => {
 
     await res.json({ success: true });
 
-    await group.notifyRemove();
+    await group.notifyRemove(req.headers.wsclientid);
 });
 
 /**

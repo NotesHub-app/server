@@ -136,7 +136,7 @@ router.post(
 
         await res.status(201).json({ note: newNote.toViewJSON() });
 
-        await newNote.notifyUpdate();
+        await newNote.notifyUpdate(req.headers.wsclientid);
     }
 );
 
@@ -210,9 +210,9 @@ router.patch(
 
         await note.save();
 
-        await res.json({ success: true, updatedAt: note.updatedAt.getTime() });
+        await res.json({ success: true });
 
-        await note.notifyUpdate();
+        await note.notifyUpdate(req.headers.wsclientid);
     }
 );
 
@@ -230,7 +230,7 @@ router.delete('/:note', allowToEditNote, async (req, res) => {
         if (noteToRemove) {
             await noteToRemove.remove();
 
-            await noteToRemove.notifyRemove();
+            await noteToRemove.notifyRemove(req.headers.wsclientid);
         }
     }
 
