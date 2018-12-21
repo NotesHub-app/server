@@ -46,7 +46,7 @@ export const fileParamFunction = async (req, res, next, fileId) => {
             { $or: [{ owner: user._id }, { group: { $in: user.groupIds } }] },
             { files: file._id },
         ],
-    }).select(['_id']);
+    }).select(['_id', 'owner', 'group', 'files']);
     if (!note) {
         return forbiddenResponse(res);
     }

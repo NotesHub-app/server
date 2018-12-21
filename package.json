@@ -5,7 +5,8 @@
     "license": "MIT",
     "scripts": {
         "dev": "better-npm-run start-dev",
-        "start": "better-npm-run start-prod",
+        "build": "babel src -d build",
+        "prod": "better-npm-run start-prod",
         "test": "better-npm-run test",
         "prettier": "prettier-eslint --write \"**/*.{js,json,css}\"",
         "lint": "eslint.cmd src/**/*.js",
@@ -21,7 +22,7 @@
             }
         },
         "start-prod": {
-            "command": "babel-node src/server.js",
+            "command": "babel-node build/server.js",
             "env": {
                 "NODE_ENV": "production",
                 "MONGO_URL": "mongodb://127.0.0.1:27017/noteshub",
@@ -48,6 +49,7 @@
         "{src}/**/*.js": "eslint --max-warnings 0"
     },
     "dependencies": {
+        "@babel/cli": "^7.2.3",
         "@babel/core": "^7.1.6",
         "@babel/node": "^7.0.0",
         "@babel/plugin-proposal-class-properties": "^7.2.1",
@@ -89,7 +91,6 @@
         "babel-eslint": "^10.0.1",
         "babel-jest": "^23.6.0",
         "eslint": "^5.9.0",
-        "eslint-config-airbnb": "^17.1.0",
         "eslint-config-airbnb-base": "^13.1.0",
         "eslint-config-prettier": "^3.3.0",
         "eslint-plugin-import": "^2.14.0",

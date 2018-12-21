@@ -53,7 +53,7 @@ const mongoSchema = new mongoose.Schema(
         owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 mongoSchema.pre('remove', async function() {
