@@ -112,7 +112,7 @@ describe('files', () => {
     describe('[GET /api/directDownload/:fileCode]', () => {
         test('скачивание файла по прямой ссылке', async () => {
             const response = await request(app).get(
-                `/api/directDownload/${file.downloadCode}?token=${author.generateJWT({type: 'file'})}`,
+                `/api/directDownload/${file.downloadCode}?token=${author.generateJWT({ type: 'file' })}`,
             );
 
             expect(response.statusCode).toBe(200);

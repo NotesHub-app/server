@@ -16,41 +16,63 @@ const previousKeeper = field =>
 
 const mongoSchema = new mongoose.Schema(
     {
+        // Название заметки
         title: {
             type: String,
             keepHistory: true,
             set: previousKeeper('title'),
         },
+
+        // Иконка в дереве
         icon: {
             type: String,
             keepHistory: true,
             set: previousKeeper('icon'),
         },
+
+        // Цвет иконки (формат #FFFFFF)
         iconColor: {
             type: String,
             keepHistory: true,
             set: previousKeeper('iconColor'),
         },
+
+        // Основное содержимое заметки
         content: {
             type: String,
             keepHistory: true,
             set: previousKeeper('content'),
         },
+
+        // Родительская заметка (для построения дерева)
         parent: { type: mongoose.Schema.Types.ObjectId, ref: 'Note' },
+
+        // Файлы заметки
         files: [{ type: mongoose.Schema.Types.ObjectId, ref: 'File' }],
+
+        // История правок
         history: [
             {
+                // Массив изменений
                 changes: [
                     {
                         field: String,
                         diff: Object,
                     },
                 ],
+
+                // Автор правок
                 author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+
+                // Время правки
                 dateTime: Date,
             },
         ],
+
+        // Владелец заметки - пользователь
         owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+
+        // Владелец заметки - группа
         group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' },
     },
     { timestamps: true },
@@ -68,7 +90,7 @@ mongoSchema.pre('remove', async function() {
 
 class NoteClass {
     /**
-     * Уведомить об создании/обновлении заметки
+     * Уведомить об создании/обновлении заметки по ws
      * @param wsClientId
      */
     async notifyUpdate(wsClientId) {
@@ -77,7 +99,7 @@ class NoteClass {
     }
 
     /**
-     * Уведомить об создании/обновлении файла заметки
+     * Уведомить об создании/обновлении файла заметки по ws
      * @param file
      * @param wsClientId
      * @returns {Promise<void>}
@@ -88,7 +110,7 @@ class NoteClass {
     }
 
     /**
-     * Уведомить об удалении файла заметки
+     * Уведомить об удалении файла заметки по ws
      * @param fileId
      * @param wsClientId
      * @returns {Promise<void>}
@@ -99,7 +121,7 @@ class NoteClass {
     }
 
     /**
-     * Уведомить об удалении заметки
+     * Уведомить об удалении заметки по ws
      * @param wsClientId
      */
     async notifyRemove(wsClientId) {
@@ -166,7 +188,6 @@ class NoteClass {
     /**
      * Получения массива ID-ов всех вложенных дочерних заметок
      * @param note
-     * @returns {Promise<*>}
      */
     static async getChildrenIdsOf(note) {
         const result = await this.aggregate([
@@ -210,10 +231,7 @@ class NoteClass {
         return true;
     }
 
-    /**
-     * Получить массив ID-ов причастных к заметке пользователей
-     * @returns {Promise<*>}
-     */
+    /** Получить массив ID-ов причастных к заметке пользователей */
     async getInvolvedUserIds() {
         const note = this;
 

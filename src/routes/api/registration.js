@@ -8,9 +8,7 @@ import { notFoundResponse } from '../../utils/response';
 
 const router = express.Router();
 
-/**
- * Регистрация пользователя
- */
+// Регистрация пользователя
 router.post(
     '/',
     [
@@ -92,12 +90,10 @@ router.post(
         }
 
         return res.json({ success: true });
-    }
+    },
 );
 
-/**
- * Подтверждение регистрации по коду из письма
- */
+// Подтверждение регистрации по коду из письма
 router.post(
     '/confirm',
     [
@@ -123,7 +119,7 @@ router.post(
         await user.save();
 
         return res.json({ success: true });
-    }
+    },
 );
 
 export default router;

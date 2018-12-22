@@ -9,7 +9,7 @@
         "prod": "better-npm-run start-prod",
         "test": "better-npm-run test",
         "prettier": "prettier-eslint --write \"**/*.{js,json,css}\"",
-        "lint": "eslint.cmd src/**/*.js",
+        "lint": "eslint src/**/*.js --max-warnings 0",
         "test:watch": "npm run test -- --watch --onlyChanged"
     },
     "betterScripts": {
@@ -42,11 +42,14 @@
         }
     },
     "lint-staged": {
-        "{src}/**/*.{js,json,css}": [
-            "prettier-eslint --write",
-            "git add"
-        ],
-        "{src}/**/*.js": "eslint --max-warnings 0"
+        "linters": {
+            "*.{js,json,css,md}": [
+                "prettier-eslint --write",
+                "git add"
+            ],
+            "src/**/*.js": "eslint --max-warnings 0"
+        },
+        "concurrent": false
     },
     "dependencies": {
         "@babel/cli": "^7.2.3",

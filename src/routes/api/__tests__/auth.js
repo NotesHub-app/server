@@ -45,7 +45,7 @@ describe('auth', () => {
             expect(response.statusCode).toBe(401);
         });
 
-        test(' успешная авторизация', async () => {
+        test('успешная аутентификация', async () => {
             await new User(validUser).save();
 
             const response = await request(app)

@@ -1,11 +1,10 @@
 import { check } from 'express-validator/check';
-import * as _ from 'lodash';
 import validator from 'validator';
 import express from 'express';
 import Note from '../../models/Note';
 import { checkValidation } from '../../middlewares/validation';
 import { forbiddenResponse, notFoundResponse, validationErrorResponse } from '../../utils/response';
-import DiffMatchPatch from 'diff-match-patch';
+import { patchDocObj } from '../../utils/data';
 
 const router = express.Router();
 
@@ -40,21 +39,17 @@ const allowToEditNote = (req, res, next) => {
     return next();
 };
 
-/**
- * получение дерева заметок
- */
+// получение дерева заметок
 router.get('/', async (req, res) => {
     // Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
     const notes = await Note.find({ $or: [{ owner: req.user._id }, { group: { $in: req.user.groupIds } }] }).select(
-        '-content -files'
+        '-content -files',
     );
 
     res.status(200).json({ notes: notes.map(note => note.toIndexJSON()) });
 });
 
-/**
- * получение конкретной заметки
- */
+// получение конкретной заметки
 router.get('/:note', async (req, res) => {
     const { note } = req.params;
 
@@ -64,9 +59,7 @@ router.get('/:note', async (req, res) => {
     return res.status(200).json({ note: note.toViewJSON() });
 });
 
-/**
- * Создание заметки
- */
+// Создание заметки
 router.post(
     '/',
     [
@@ -138,12 +131,10 @@ router.post(
         await res.status(201).json({ note: newNote.toViewJSON() });
 
         await newNote.notifyUpdate(req.headers.wsclientid);
-    }
+    },
 );
 
-/**
- * Обновление заметки
- */
+// Обновление заметки
 router.patch(
     '/:note',
     [
@@ -159,9 +150,7 @@ router.patch(
         check('iconColor')
             .optional()
             .isString(),
-        // check('content')
-        //     .optional()
-        //     .isString(),
+        check('content').optional(),
         check('parentId')
             .optional()
             .isMongoId(),
@@ -194,45 +183,31 @@ router.patch(
             }
         }
 
-        // Обновляем только те поля которые пришли с запросом
-        _.forEach(
-            {
-                title,
-                icon,
-                iconColor,
-                content,
-            },
-            (value, field) => {
-                if (!_.isUndefined(value)) {
-
-                    // Контент принимаем как patch-массив
-                    if(field === 'content'){
-                        const dmp = new DiffMatchPatch();
-                        const [newValue, result] = dmp.patch_apply(value, note.content);
-                        // Если операция применения патча не удалась
-                        if(!result){
-                            // отдать уведомление о проблемах клиенту, чтоб тот перезагрузил содержимое
-                            res.status(409).json({});
-                            return
-                        }
-                        value = newValue;
-                    }
-                    note[field] = value;
-                }
-            }
-        );
+        try {
+            patchDocObj(
+                note,
+                {
+                    title,
+                    icon,
+                    iconColor,
+                    content,
+                },
+                ['content'],
+            );
+        } catch (e) {
+            res.status(409).json({});
+            throw e;
+        }
 
         await note.save();
 
         await res.json({ success: true });
 
         await note.notifyUpdate(req.headers.wsclientid);
-    }
+    },
 );
 
-/**
- * Удаление заметки
- */
+// Удаление заметки
 router.delete('/:note', allowToEditNote, async (req, res) => {
     const { note } = req.params;
 

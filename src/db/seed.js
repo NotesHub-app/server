@@ -11,6 +11,9 @@ const getNonce = () => {
     return nonceValue;
 };
 
+/**
+ * Генератор дерева заметов
+ */
 async function makeNotes({ parent, group, owner, deepness = 0 }) {
     if (deepness < 3) {
         // eslint-disable-next-line no-unused-vars
@@ -26,6 +29,9 @@ async function makeNotes({ parent, group, owner, deepness = 0 }) {
     }
 }
 
+/**
+ * Сидирование условных данных в пустую базу.
+ */
 export default async function seed() {
     // Если нет пользователей
     if (!(await User.countDocuments())) {

@@ -9,16 +9,14 @@ import { getAttachmentHeaderString } from '../../utils/string';
 
 const router = express.Router();
 
-// Подгрузка File по параметру роута
+// Подгрузка File по параметру роута (код-файла)
 router.param('fileCode', async (req, res, next, fileCode) => {
     const file = await File.findOne({ downloadCode: fileCode });
     const fileId = file && file._id.toString();
     return await fileParamFunction(req, res, next, fileId);
 });
 
-/**
- * Скачать содержмиое файла
- */
+// Скачать содержмиое файла по коду файла
 router.get('/:fileCode', async (req, res) => {
     const { file } = req.params;
 

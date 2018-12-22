@@ -5,9 +5,7 @@ import { checkValidation } from '../../middlewares/validation';
 
 const router = express.Router();
 
-/**
- * обновить персональные настройки
- */
+// Обновить персональные настройки
 router.patch(
     '/me',
     [
@@ -56,7 +54,7 @@ router.patch(
         await user.save();
 
         return res.json({ success: true });
-    }
+    },
 );
 
 export default router;

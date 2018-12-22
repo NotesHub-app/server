@@ -14,7 +14,6 @@ if (process.env.NODE_ENV !== 'test') {
         .on('connected', () => {
             console.info('[DB] MongoDB connected!');
 
-            // Показываем дебуггерскую инфу в консоль
             if (process.env.NODE_ENV === 'development') {
                 dbSeed();
             }
@@ -30,19 +29,22 @@ if (process.env.NODE_ENV !== 'test') {
         });
 }
 
-const connectionPromise = mongoose.connect(process.env.MONGO_URL, {
-    promiseLibrary: Promise,
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useFindAndModify: false,
-    reconnectTries: Number.MAX_VALUE,
-    reconnectInterval: 500,
-    poolSize: 10,
-    bufferMaxEntries: 0,
-    connectTimeoutMS: 10000,
-    socketTimeoutMS: 45000,
-    family: 4,
-});
+const connectionPromise = mongoose.connect(
+    process.env.MONGO_URL,
+    {
+        promiseLibrary: Promise,
+        useNewUrlParser: true,
+        useCreateIndex: true,
+        useFindAndModify: false,
+        reconnectTries: Number.MAX_VALUE,
+        reconnectInterval: 500,
+        poolSize: 10,
+        bufferMaxEntries: 0,
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        family: 4,
+    },
+);
 
 // Показываем дебуггерскую инфу в консоль
 if (process.env.NODE_ENV === 'development') {

@@ -4,22 +4,34 @@ import uuidv4 from 'uuid/v4';
 
 const mongoSchema = new mongoose.Schema(
     {
+        // Имя файла
         fileName: {
             type: String,
             required: true,
         },
+
+        // Описание файла
         description: {
             type: String,
         },
+
+        // ID файла из grid-fs
         fsFileId: {
             type: String,
         },
+
+        // Mime-Type файла
         mimeType: {
             type: String,
         },
+
+        // Размер в байтах
         size: {
             type: Number,
         },
+
+        // Уникальный код файла для скачивания
+        // (Не используем обычный _id для скачивания чтоб исключить возможность брута)
         downloadCode: { type: String, unique: true },
     },
     { timestamps: true },
@@ -45,9 +57,7 @@ mongoSchema.pre('remove', async function(next) {
 });
 
 class FileClass {
-    /**
-     * Преобразовать к объекту для выдачи в списках
-     */
+    /** Преобразовать к объекту для выдачи в списках */
     toIndexJSON() {
         return {
             id: this._id,

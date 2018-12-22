@@ -5,38 +5,50 @@ import ws from '../ws';
 
 const mongoSchema = new mongoose.Schema(
     {
+        // Название группы (заголовок)
         title: {
             type: String,
             required: true,
         },
+
+        // Инвайт-коды для присоединения к группе
         inviteCodes: [
             {
+                // Случайная строка
                 code: {
                     type: String,
                     required: true,
                 },
+
+                // Время когда код перестанет действовать
                 expireDate: {
                     type: Date,
                     required: true,
                 },
+
+                // Кто сгенерировал код
                 author: {
                     type: mongoose.Schema.Types.ObjectId,
                     ref: 'User',
                     required: true,
                 },
+
+                // Роль которая будет присвоена вступившему в группу по этому коду
                 role: Number,
             },
         ],
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 class GroupClass {
+    /** Уведомить об обновлении группы по ws */
     async notifyUpdate(wsClientId) {
         const group = this;
         await ws.notifyGroupUpdate(group, await group.getUsers(), wsClientId);
     }
 
+    /** Уведомить об удалении группы по ws */
     async notifyRemove(wsClientId) {
         const group = this;
         ws.notifyGroupRemove(group._id.toString(), await group.getUserIds(), wsClientId);
@@ -49,6 +61,7 @@ class GroupClass {
      */
     checkAllowToEdit(user) {
         const group = this;
+
         // Автор запроса должен быть админом группы
         return user.groups.some(i => i.group._id.toString() === group._id.toString() && i.role === 0);
     }
@@ -60,7 +73,7 @@ class GroupClass {
      */
     generateInviteCode({ user, role }) {
         const group = this;
-        role = role || 2; // По умолчанию роль чтение и никогда админ
+        role = role || 2; // По умолчанию роль чтение (2) и никогда админ (0)
 
         const codeObj = {
             code: randomString(20),
@@ -79,6 +92,7 @@ class GroupClass {
      * @param user
      */
     toIndexJSON(user) {
+        // Получение роли пользователя в этой группе
         const { role } = user.groups.find(i => i.group._id.toString() === this._id.toString());
 
         return {
@@ -89,12 +103,14 @@ class GroupClass {
         };
     }
 
+    /** Получить списко пользователей группы */
     async getUsers() {
         const group = this;
 
         return await this.model('User').find({ groups: { $elemMatch: { group } } });
     }
 
+    /** Получить список только ID пользователей группы */
     async getUserIds() {
         const users = await this.getUsers();
         return users.map(i => i._id.toString());
@@ -110,10 +126,6 @@ class GroupClass {
 
         const resultUsers = [];
         users.forEach(({ groups, _id, email, userName, githubId, githubInfo, googleId, googleInfo }) => {
-            // Самого пользователя не заносим в массив
-            if (user && user._id.toString() === _id.toString()) {
-                return;
-            }
             const { role } = groups.find(i => i.group.toString() === this._id.toString());
             const resultUser = {
                 id: _id,

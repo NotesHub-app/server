@@ -51,7 +51,7 @@ const mongoSchema = new mongoose.Schema(
         googleId: Number,
         googleInfo: Object,
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 mongoSchema.plugin(uniqueValidator, { message: 'is already taken.' });
@@ -97,13 +97,11 @@ class UserClass {
                 ...additionalData,
             },
             secret,
-            { expiresIn }
+            { expiresIn },
         );
     }
 
-    /**
-     * Генерация кода восстановления пароля
-     */
+    /** Генерация кода восстановления пароля */
     generateRestorePasswordCode() {
         const user = this;
 
@@ -113,19 +111,27 @@ class UserClass {
         });
     }
 
-    /**
-     * Генерация кода для рефреш-токена
-     */
+    /** Генерация кода для рефреш-токена */
     generateRefreshTokenCode() {
         this.refreshTokenCode = randomString(10);
     }
 
     /**
-     * Сгернерировать ответ для авторизации
-     * @returns {{fileToken: *, email: *, token: string, refreshToken: string}}
+     * Обноалвение настроек UI (merge-ом)
+     * @param uiSettings
      */
+    updateUiSetting(uiSettings) {
+        const resultSettings = { ...this.uiSettings };
+        for (const [param, value] of Object.entries(uiSettings)) {
+            resultSettings[param] = value;
+        }
+        this.uiSettings = resultSettings;
+    }
+
+    /** Сгернерировать ответ для авторизации */
     toAuthJSON() {
         return {
+            id: this._id,
             email: this.email,
             userName: this.userName,
             token: `JWT ${this.generateJWT()}`,
@@ -141,21 +147,7 @@ class UserClass {
         };
     }
 
-    /**
-     * Обноалвение настроек UI (merge-ом)
-     * @param uiSettings
-     */
-    updateUiSetting(uiSettings) {
-        const resultSettings = { ...this.uiSettings };
-        for (const [param, value] of Object.entries(uiSettings)) {
-            resultSettings[param] = value;
-        }
-        this.uiSettings = resultSettings;
-    }
-
-    /**
-     * Сгернерировать ответ для получние полного объекта пользователя
-     */
+    /** Сгернерировать ответ для получние полного объекта пользователя */
     toFullUserJSON() {
         return {
             ...this.toAuthJSON(),

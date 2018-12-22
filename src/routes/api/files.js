@@ -60,9 +60,7 @@ export const fileParamFunction = async (req, res, next, fileId) => {
 // Подгрузка File по параметру роута
 router.param('file', fileParamFunction);
 
-/**
- * Middleware проверки, что пользователь может редактировать файл
- */
+/** Middleware проверки, что пользователь может редактировать файл */
 const allowToEditFile = (req, res, next) => {
     const { fileNote: note } = req.params;
     if (!note.checkAllowToEdit(req.user)) {
@@ -72,9 +70,7 @@ const allowToEditFile = (req, res, next) => {
     return next();
 };
 
-/**
- * Создание записи о файле
- */
+// Создание записи о файле
 router.post(
     '/',
     [
@@ -115,12 +111,10 @@ router.post(
         await note.save();
 
         return res.status(201).json({ file: file.toIndexJSON() });
-    }
+    },
 );
 
-/**
- * Обновить информацию по файлу
- */
+// Обновить информацию по файлу
 router.patch(
     '/:file',
     [
@@ -152,18 +146,16 @@ router.patch(
                 if (!_.isUndefined(value)) {
                     file[field] = value;
                 }
-            }
+            },
         );
 
         await file.save();
 
         return res.json({ success: true });
-    }
+    },
 );
 
-/**
- * Залить содержимое файла
- */
+// Залить содержимое файла
 router.post('/:file/upload', [allowToEditFile, fileUpload], async (req, res) => {
     const { file, fileNote } = req.params;
     const savedFile = req.file;
@@ -178,9 +170,7 @@ router.post('/:file/upload', [allowToEditFile, fileUpload], async (req, res) => 
     await fileNote.notifyFileUpdate(file, req.headers.wsclientid);
 });
 
-/**
- * Скачать содержмиое файла
- */
+// Скачать содержмиое файла
 router.get('/:file/download', async (req, res) => {
     const { file } = req.params;
 
@@ -196,9 +186,7 @@ router.get('/:file/download', async (req, res) => {
     return bucket.openDownloadStream(mongoose.Types.ObjectId(file.fsFileId)).pipe(res);
 });
 
-/**
- * Удаление файла
- */
+// Удаление файла
 router.delete('/:file', allowToEditFile, async (req, res) => {
     const { file } = req.params;
 
@@ -207,9 +195,7 @@ router.delete('/:file', allowToEditFile, async (req, res) => {
     return res.json({ success: true });
 });
 
-/**
- * Пакетное удаление файлов
- */
+// Пакетное удаление файлов
 router.delete(
     '/',
     [
@@ -242,7 +228,7 @@ router.delete(
         }
 
         await res.json({ success: true });
-    }
+    },
 );
 
 export default router;

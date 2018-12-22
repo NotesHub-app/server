@@ -240,7 +240,7 @@ describe('groups', () => {
             // Нужный пользователь и нужная группа
             const group = await new Group({ title: 'group' }).save();
             const user = await new User({ email: 'user@email.com', groups: [{ group, role: 0 }] }).save();
-            const anotherUser = await new User({ email: 'anotherUser@email.com', groups: [{ group, role: 1 }] }).save();
+            await new User({ email: 'anotherUser@email.com', groups: [{ group, role: 1 }] }).save();
 
             const response = await request(app)
                 .get(`/api/groups/${group._id}`)
@@ -249,10 +249,7 @@ describe('groups', () => {
             expect(response.statusCode).toBe(200);
 
             expect(response.body.group.title).toBe('group');
-            expect(response.body.group.users).toHaveLength(1);
-            expect(response.body.group.users[0].id).toBe(anotherUser._id.toString());
-            expect(response.body.group.users[0].email).toBe(anotherUser.email);
-            expect(response.body.group.users[0].role).toBe(1);
+            expect(response.body.group.users).toHaveLength(2);
         });
     });
 });

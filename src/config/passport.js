@@ -6,7 +6,7 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '../models/User';
 import { secret } from './index';
 
-// Настройка проверки авторизации по паролю
+// Настройка проверки аутентификации по паролю
 passport.use(
     new LocalStrategy(
         {
@@ -27,11 +27,14 @@ passport.use(
             }
 
             return done(null, user);
-        }
-    )
+        },
+    ),
 );
 
+//
 // Стратегия jwt-auth
+//
+
 const jwtAuthStrategy = new JwtStrategy(
     {
         jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('jwt'),
@@ -51,12 +54,15 @@ const jwtAuthStrategy = new JwtStrategy(
         } catch (err) {
             return done(err, false);
         }
-    }
+    },
 );
 jwtAuthStrategy.name = 'jwt-auth';
 passport.use(jwtAuthStrategy);
 
+//
 // Стратегия jwt-refresh
+//
+
 const jwtRefreshStrategy = new JwtStrategy(
     {
         jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('jwt'),
@@ -77,12 +83,15 @@ const jwtRefreshStrategy = new JwtStrategy(
         } catch (err) {
             return done(err, false);
         }
-    }
+    },
 );
 jwtRefreshStrategy.name = 'jwt-refresh';
 passport.use(jwtRefreshStrategy);
 
+//
 // Стратегия jwt-file
+//
+
 const jwtFileStrategy = new JwtStrategy(
     {
         jwtFromRequest: ExtractJwt.fromUrlQueryParameter('token'),
@@ -102,12 +111,15 @@ const jwtFileStrategy = new JwtStrategy(
         } catch (err) {
             return done(err, false);
         }
-    }
+    },
 );
 jwtFileStrategy.name = 'jwt-file';
 passport.use(jwtFileStrategy);
 
+//
 // Стратегия github
+//
+
 const githubStrategy = new GitHubStrategy(
     {
         clientID: process.env.GITHUB_CLIENT_ID,
@@ -134,12 +146,15 @@ const githubStrategy = new GitHubStrategy(
         } catch (err) {
             return done(err, false);
         }
-    }
+    },
 );
 githubStrategy.name = 'github';
 passport.use(githubStrategy);
 
+//
 // Стратегия google
+//
+
 const googleStrategy = new GoogleStrategy(
     {
         clientID: process.env.GOOGLE_CLIENT_ID,
@@ -149,8 +164,6 @@ const googleStrategy = new GoogleStrategy(
         failureRedirect: 'http://localhost:3000/login?status=failed',
     },
     async (accessToken, refreshToken, profile, done) => {
-        console.log(profile);
-
         try {
             let user = await User.findOne({ googleId: profile.id });
             if (!user) {
@@ -169,7 +182,7 @@ const googleStrategy = new GoogleStrategy(
         } catch (err) {
             return done(err, false);
         }
-    }
+    },
 );
 googleStrategy.name = 'google';
 passport.use(googleStrategy);

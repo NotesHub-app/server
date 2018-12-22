@@ -3,13 +3,11 @@ import express from 'express';
 import * as _ from 'lodash';
 import { checkValidation } from '../../middlewares/validation';
 import User from '../../models/User';
-import { notFoundResponse, validationErrorResponse } from '../../utils/response';
+import { validationErrorResponse } from '../../utils/response';
 
 const router = express.Router();
 
-/**
- * восстановление пароля (в теле указываем email)
- */
+// восстановление пароля (в теле указываем email)
 router.post(
     '/',
     [
@@ -47,12 +45,10 @@ router.post(
         }
 
         return res.json({ success: true });
-    }
+    },
 );
 
-/**
- * восстановление пароля (в теле код из письма и новый пароль пользователя)
- */
+// восстановление пароля (в теле код из письма и новый пароль пользователя)
 router.post(
     '/confirm',
     [
@@ -75,7 +71,7 @@ router.post(
         });
 
         if (!user) {
-            return validationErrorResponse(res,[
+            return validationErrorResponse(res, [
                 {
                     location: 'body',
                     msg: 'Неверный код',
@@ -88,7 +84,7 @@ router.post(
         await user.save();
 
         return res.json({ success: true });
-    }
+    },
 );
 
 export default router;

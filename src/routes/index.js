@@ -31,15 +31,16 @@ export default app => {
 
     app.use('/api', apiRouter);
 
-    // 404 handler
+    // обертка для 404
     app.use((req, res, next) => {
         const err = new Error('Not Found');
         err.status = 404;
         next(err);
     });
 
-    // catch ERROR handler
-    app.use((err, req, res) => {
+    // Обработка всех ошибок
+    // eslint-disable-next-line no-unused-vars
+    app.use((err, req, res, next) => {
         if (process.env.NODE_ENV !== 'production') {
             console.warn(err.stack);
         }
@@ -47,10 +48,8 @@ export default app => {
         res.status(err.status || 500);
 
         res.json({
-            errors: {
-                message: err.message,
-                error: process.env.NODE_ENV !== 'production' ? err : undefined,
-            },
+            message: err.message,
+            error: process.env.NODE_ENV !== 'production' ? err : true,
         });
     });
 };

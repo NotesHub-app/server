@@ -1,5 +1,4 @@
 import { check } from 'express-validator/check';
-import * as _ from 'lodash';
 import dayjs from 'dayjs';
 import validator from 'validator';
 import express from 'express';
@@ -7,6 +6,7 @@ import { checkValidation } from '../../middlewares/validation';
 import Group from '../../models/Group';
 import { alreadyDoneResponse, forbiddenResponse, notFoundResponse } from '../../utils/response';
 import User from '../../models/User';
+import { patchDocObj } from '../../utils/data';
 
 const router = express.Router();
 
@@ -30,9 +30,7 @@ router.param('group', async (req, res, next, groupId) => {
     return next();
 });
 
-/**
- * получение списка своих групп
- */
+// получение списка своих групп
 router.get('/', async (req, res) => {
     // Выбираем только заметки принадлежащие пользователю или группам в которых он состоит
     const groups = await Group.find({ _id: { $in: req.user.groupIds } }).select('-inviteCodes');
@@ -40,18 +38,14 @@ router.get('/', async (req, res) => {
     res.status(200).json({ groups: groups.map(group => group.toIndexJSON(req.user)) });
 });
 
-/**
- * получение детальной инфы о группе
- */
+// получение детальной инфы о группе
 router.get('/:group', async (req, res) => {
     const { group } = req.params;
 
     res.status(200).json({ group: await group.toViewJSON(req.user) });
 });
 
-/**
- * создание новой группы
- */
+// создание новой группы
 router.post(
     '/',
     [
@@ -80,12 +74,10 @@ router.post(
         await res.status(201).json({ group: newGroup.toIndexJSON(req.user) });
 
         await newGroup.notifyUpdate(req.headers.wsclientid);
-    }
+    },
 );
 
-/**
- * обновление свойств группы
- */
+// обновление свойств группы
 router.patch(
     '/:group',
     [
@@ -102,11 +94,15 @@ router.patch(
     ],
     async (req, res) => {
         const { group } = req.params;
-        const { title, users } = req.body;
+        const { title } = req.body;
+        let { users } = req.body;
 
         if (!group.checkAllowToEdit(req.user)) {
             return forbiddenResponse(res);
         }
+
+        // Пользователь не может менять себя в группе - поэтому его исключаем из массива
+        users = users.filter(({ id }) => id !== req.user._id.toString());
 
         // Обновляем группы у пользователей
         for (const formUser of users) {
@@ -125,27 +121,24 @@ router.patch(
         }
 
         // Обновляем только те поля которые пришли с запросом
-        _.forEach(
-            {
+        try {
+            patchDocObj(group, {
                 title,
-            },
-            (value, field) => {
-                if (!_.isUndefined(value)) {
-                    group[field] = value;
-                }
-            }
-        );
+            });
+        } catch (e) {
+            res.status(409).json({});
+            throw e;
+        }
+
         await group.save();
 
         await res.json({ success: true });
 
         await group.notifyUpdate(req.headers.wsclientid);
-    }
+    },
 );
 
-/**
- * Удаление группы со всем содержимым
- */
+// Удаление группы со всем содержимым
 router.delete('/:group', async (req, res) => {
     const { group } = req.params;
 
@@ -160,9 +153,7 @@ router.delete('/:group', async (req, res) => {
     await group.notifyRemove(req.headers.wsclientid);
 });
 
-/**
- * получение инвайт-ссылки для группы
- */
+// получение инвайт-ссылки для группы
 router.get(
     '/:group/invite',
     [
@@ -183,12 +174,10 @@ router.get(
         await group.save();
 
         return res.json({ ...codeObj, groupId: group._id.toString() });
-    }
+    },
 );
 
-/**
- * Добавиться в группу
- */
+// Добавиться в группу
 router.post(
     '/:group/join',
     [
@@ -205,7 +194,7 @@ router.post(
                 // Код совпадает
                 i.code === code &&
                 // Код всё еще не просрочен
-                dayjs().isBefore(dayjs(i.expireDate))
+                dayjs().isBefore(dayjs(i.expireDate)),
         );
         if (!inviteCode) {
             return forbiddenResponse(res);
@@ -221,7 +210,7 @@ router.post(
         await req.user.save();
 
         return res.json({ success: true });
-    }
+    },
 );
 
 export default router;
