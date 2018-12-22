@@ -5,6 +5,7 @@ import express from 'express';
 import Note from '../../models/Note';
 import { checkValidation } from '../../middlewares/validation';
 import { forbiddenResponse, notFoundResponse, validationErrorResponse } from '../../utils/response';
+import DiffMatchPatch from 'diff-match-patch';
 
 const router = express.Router();
 
@@ -158,9 +159,9 @@ router.patch(
         check('iconColor')
             .optional()
             .isString(),
-        check('content')
-            .optional()
-            .isString(),
+        // check('content')
+        //     .optional()
+        //     .isString(),
         check('parentId')
             .optional()
             .isMongoId(),
@@ -203,6 +204,19 @@ router.patch(
             },
             (value, field) => {
                 if (!_.isUndefined(value)) {
+
+                    // Контент принимаем как patch-массив
+                    if(field === 'content'){
+                        const dmp = new DiffMatchPatch();
+                        const [newValue, result] = dmp.patch_apply(value, note.content);
+                        // Если операция применения патча не удалась
+                        if(!result){
+                            // отдать уведомление о проблемах клиенту, чтоб тот перезагрузил содержимое
+                            res.status(409).json({});
+                            return
+                        }
+                        value = newValue;
+                    }
                     note[field] = value;
                 }
             }

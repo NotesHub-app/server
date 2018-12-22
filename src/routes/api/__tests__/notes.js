@@ -5,6 +5,7 @@ import User from '../../../models/User';
 import Group from '../../../models/Group';
 import { resetDB } from '../../../test/helpers';
 import { generateNote } from '../../../utils/fake';
+import DiffMatchPatch from 'diff-match-patch';
 
 let author;
 let anotherAuthor;
@@ -137,6 +138,27 @@ describe('notes', () => {
             expect(response.body.note.parentId).toBe(newNote.parentId);
             // Группа всё равно должна быть, даже если мы её не указали (берется от родителя)
             expect(response.body.note.groupId).toBe(group._id.toString());
+        });
+    });
+
+    describe('[PATCH /api/notes]', () => {
+        test('обновление заметки', async () => {
+            let note = await new Note({ ...generateNote('xxx'), content: 'OLD_CONTENT', owner: author._id }).save();
+
+            const dmp = new DiffMatchPatch();
+            const contentPatch = dmp.patch_make(note.content, 'NEW_CONTENT');
+
+            const response = await request(app)
+                .patch(`/api/notes/${note._id}`)
+                .send({ title: 'NEW_TITLE', content: contentPatch })
+                .set('Authorization', `JWT ${author.generateJWT()}`);
+
+            expect(response.statusCode).toBe(200);
+
+            note = await Note.findById(note._id);
+
+            expect(note.title).toBe('NEW_TITLE');
+            expect(note.content).toBe('NEW_CONTENT');
         });
     });
 
