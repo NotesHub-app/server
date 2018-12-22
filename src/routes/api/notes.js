@@ -183,21 +183,16 @@ router.patch(
             }
         }
 
-        try {
-            patchDocObj(
-                note,
-                {
-                    title,
-                    icon,
-                    iconColor,
-                    content,
-                },
-                ['content'],
-            );
-        } catch (e) {
-            res.status(409).json({});
-            throw e;
-        }
+        patchDocObj(
+            note,
+            {
+                title,
+                icon,
+                iconColor,
+                content,
+            },
+            ['content'],
+        );
 
         await note.save();
 

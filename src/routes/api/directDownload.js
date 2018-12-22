@@ -1,6 +1,6 @@
+import express from 'express';
 import mongodb from 'mongodb';
 import mongoose from 'mongoose';
-import express from 'express';
 import { notFoundResponse } from '../../utils/response';
 import mongooseConnectionPromise from '../../db';
 import { fileParamFunction } from './files';

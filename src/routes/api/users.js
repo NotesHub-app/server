@@ -2,6 +2,7 @@ import express from 'express';
 import { check } from 'express-validator/check';
 import { requireAuth } from '../../middlewares/auth';
 import { checkValidation } from '../../middlewares/validation';
+import { patchDocObj } from '../../utils/data';
 
 const router = express.Router();
 
@@ -38,18 +39,16 @@ router.patch(
     ],
     async (req, res) => {
         const { user } = req;
-        const { uiSettings, userName, newPassword } = req.body;
+        const { uiSettings, userName, newPassword: password } = req.body;
 
         if (uiSettings) {
             user.updateUiSetting(uiSettings);
         }
 
-        if (newPassword) {
-            user.password = newPassword;
-        }
-        if (userName) {
-            user.userName = userName;
-        }
+        patchDocObj(user, {
+            password,
+            userName,
+        });
 
         await user.save();
 

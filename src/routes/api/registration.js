@@ -1,10 +1,10 @@
 import { check, validationResult } from 'express-validator/check';
 import express from 'express';
-import request from 'superagent';
 import User from '../../models/User';
 import { randomString } from '../../utils/string';
-import { checkValidation } from '../../middlewares/validation';
+import { checkRecaptcha, checkValidation } from '../../middlewares/validation';
 import { notFoundResponse } from '../../utils/response';
+import { serverConfiguration } from '../../config';
 
 const router = express.Router();
 
@@ -12,6 +12,8 @@ const router = express.Router();
 router.post(
     '/',
     [
+        checkRecaptcha(),
+
         // Валидация полей
         check('email')
             .isEmail()
@@ -25,23 +27,7 @@ router.post(
         checkValidation(),
     ],
     async (req, res) => {
-        const { email, userName, password, recaptchaToken } = req.body;
-
-        if (process.env.NODE_ENV === 'production') {
-            // Проверяем результат рекапчи
-            const {
-                body: { success, score },
-            } = await request
-                .post('https://www.google.com/recaptcha/api/siteverify')
-                .type('form')
-                .send({ secret: process.env.GOOGLE_RECAPTCHA_SECRET_KEY, response: recaptchaToken })
-                .set('accept', 'json');
-
-            // Если проверка капчи не удалась или низкий рейтинг
-            if (!success || score < 0.5) {
-                return res.status(403).json({ error: 'Невозможно произвести регистрацию.' });
-            }
-        }
+        const { email, userName, password } = req.body;
 
         let user = await User.findOne({ email });
         if (user) {
@@ -71,22 +57,24 @@ router.post(
                 userName,
                 password,
                 registration: {
-                    verified: false,
+                    verified: !serverConfiguration.emailRegistrationConfirmation,
                     code: randomString(20),
                 },
             });
             await user.save();
         }
 
-        if (process.env.NODE_ENV === 'development') {
-            console.info(`:::: REGISTRATION CODE FOR ${user.email}:    ${user.registration.code}`);
-        }
-        if (process.env.NODE_ENV === 'production') {
-            req.app.locals.mailService.sendMail({
-                to: email,
-                subject: 'Подтверждение регистрации',
-                text: `Код подтверждения: ${user.registration.code}`,
-            });
+        if (serverConfiguration.emailRegistrationConfirmation) {
+            if (process.env.NODE_ENV === 'development') {
+                console.info(`:::: REGISTRATION CODE FOR ${user.email}:    ${user.registration.code}`);
+            }
+            if (process.env.NODE_ENV === 'production') {
+                req.app.locals.mailService.sendMail({
+                    to: email,
+                    subject: 'Подтверждение регистрации',
+                    text: `Код подтверждения: ${user.registration.code}`,
+                });
+            }
         }
 
         return res.json({ success: true });

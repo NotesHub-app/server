@@ -1,5 +1,9 @@
 import * as _ from 'lodash';
 
+/**
+ * Генератор содержимого заметки для тестов
+ * @param suffix
+ */
 export function generateNote(suffix = '') {
     return {
         title: `note${suffix}`,

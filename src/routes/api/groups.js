@@ -120,15 +120,9 @@ router.patch(
             await user.save();
         }
 
-        // Обновляем только те поля которые пришли с запросом
-        try {
-            patchDocObj(group, {
-                title,
-            });
-        } catch (e) {
-            res.status(409).json({});
-            throw e;
-        }
+        patchDocObj(group, {
+            title,
+        });
 
         await group.save();
 

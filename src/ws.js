@@ -9,7 +9,7 @@ class WS {
     init(app) {
         this.io = socketIO(app);
 
-        // middleware
+        // Middleware
         this.io.use((socket, next) => {
             let { token } = socket.handshake.query;
 
@@ -26,16 +26,16 @@ class WS {
         this.io.on('connection', socket => {
             const { clientId } = socket.handshake.query;
 
-            const client = {
+            // Кладем инфу по клиенту в общий массив клиентов
+            this.clients.push({
                 id: clientId,
                 socket,
                 userId: socket.payload.id,
-            };
-
-            this.clients.push(client);
+            });
         });
 
         this.io.on('disconnect', socket => {
+            // Убираем клиента из общего массива клиентов
             const i = this.clients.findIndex(client => client.socket === socket);
             if (i > -1) {
                 this.clients.splice(i, 1);

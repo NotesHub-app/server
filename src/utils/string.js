@@ -13,6 +13,12 @@ export function randomString(length = 7) {
     return text;
 }
 
+/**
+ * Получение attachment строки для хедера при отдаче файла
+ * @param req
+ * @param fileName
+ * @returns {string}
+ */
 export function getAttachmentHeaderString(req, fileName) {
     const userAgent = (req.headers['user-agent'] || '').toLowerCase();
 

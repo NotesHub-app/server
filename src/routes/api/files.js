@@ -1,6 +1,5 @@
 import { check } from 'express-validator/check';
 import validator from 'validator';
-import * as _ from 'lodash';
 import express from 'express';
 import multer from 'multer';
 import mongodb from 'mongodb';
@@ -12,6 +11,7 @@ import File from '../../models/File';
 import { forbiddenResponse, notFoundResponse } from '../../utils/response';
 import mongooseConnectionPromise from '../../db';
 import { getAttachmentHeaderString } from '../../utils/string';
+import { patchDocObj } from '../../utils/data';
 
 const validatorMessages = {
     fileName: 'Имя файла должно содержать хотя бы 1 символ',
@@ -136,18 +136,10 @@ router.patch(
         const { file } = req.params;
         const { fileName, description } = req.body;
 
-        // Обновляем только те поля которые пришли с запросом
-        _.forEach(
-            {
-                fileName,
-                description,
-            },
-            (value, field) => {
-                if (!_.isUndefined(value)) {
-                    file[field] = value;
-                }
-            },
-        );
+        patchDocObj(file, {
+            fileName,
+            description,
+        });
 
         await file.save();
 

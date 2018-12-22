@@ -8,48 +8,74 @@ import { randomString } from '../utils/string';
 
 const mongoSchema = new mongoose.Schema(
     {
+        // Email пользователя
         email: {
             type: String,
             lowercase: true,
             index: true,
         },
+
+        // Имя пользователя
         userName: {
             type: String,
         },
+
+        // Хеш пароля
         password: String,
+
+        // Объект верификации регистрации
         registration: {
+            // Пользователь верифицирован
             verified: Boolean,
+
+            // Код верификации (отправляется на почту)
             code: String,
         },
+
+        // Группы пользователя
         groups: [
             {
+                // Группа
                 group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' },
+
+                // Роль в группе (0-админ, 1-редактор, 2-только просмотр)
                 role: {
                     type: Number,
                     required: true,
                 },
             },
         ],
+
+        // Коды восстановления пароля
         restorePasswordCodes: [
             {
+                // Сам код
                 code: {
                     type: String,
                     required: true,
                 },
+
+                // Время истечения срока действия кода
                 codeExpire: {
                     type: Date,
                     required: true,
                 },
             },
         ],
+
+        // Код для рефреш-токена (обновляется каждый раз при обновлении токена)
         refreshTokenCode: String,
+
+        // Настройки UI пользователя
         uiSettings: Object, // TODO определить фиксированные поля
 
-        githubId: Number,
-        githubInfo: Object,
+        // Если пользователь вошел через Github
+        githubId: Number, // ID в системе гитхаба
+        githubInfo: Object, // Параметры пользотвателя отданные гитхабом
 
-        googleId: Number,
-        googleInfo: Object,
+        // Если пользователь вошел через Google
+        googleId: Number, // ID в системе гугла
+        googleInfo: Object, // Параметры пользователя отданные гуглом
     },
     { timestamps: true },
 );

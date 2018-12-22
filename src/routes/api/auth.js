@@ -3,6 +3,7 @@ import { check } from 'express-validator/check';
 import { requireGithubAuth, requireGoogleAuth, requireLogin, requireRefreshAuth } from '../../middlewares/auth';
 import { randomString } from '../../utils/string';
 import { checkValidation } from '../../middlewares/validation';
+import { serverConfiguration } from '../../config';
 
 const router = express.Router();
 
@@ -52,10 +53,14 @@ router.post('/refresh-token', requireRefreshAuth, async (req, res) => {
     return res.status(200).json(result);
 });
 
-// Аутентификация через github
-router.get('/github', requireGithubAuth, loginRequestHandler);
+if (serverConfiguration.githubAuth) {
+    // Аутентификация через github
+    router.get('/github', requireGithubAuth, loginRequestHandler);
+}
 
-// Аутентификация через google
-router.get('/google', requireGoogleAuth, loginRequestHandler);
+if (serverConfiguration.googleAuth) {
+    // Аутентификация через google
+    router.get('/google', requireGoogleAuth, loginRequestHandler);
+}
 
 export default router;
