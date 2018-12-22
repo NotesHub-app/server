@@ -16,6 +16,11 @@ export const checkValidation = () => (req, res, next) => {
     return next();
 };
 
+/**
+ * Проверка google-recaptcha токена
+ * @param tokenField
+ * @returns {Function}
+ */
 export const checkRecaptcha = (tokenField = 'recaptchaToken') => async (req, res, next) => {
     const recaptchaToken = req.body[tokenField];
 
