@@ -4,7 +4,7 @@ import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '../models/User';
-import { secret } from './index';
+import { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SECRET } from './index';
 
 // Настройка проверки аутентификации по паролю
 passport.use(
@@ -38,7 +38,7 @@ passport.use(
 const jwtAuthStrategy = new JwtStrategy(
     {
         jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('jwt'),
-        secretOrKey: secret,
+        secretOrKey: SECRET,
     },
     async (payload, done) => {
         if (payload.type !== 'auth') {
@@ -66,7 +66,7 @@ passport.use(jwtAuthStrategy);
 const jwtRefreshStrategy = new JwtStrategy(
     {
         jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('jwt'),
-        secretOrKey: secret,
+        secretOrKey: SECRET,
     },
     async (payload, done) => {
         if (payload.type !== 'refresh') {
@@ -95,7 +95,7 @@ passport.use(jwtRefreshStrategy);
 const jwtFileStrategy = new JwtStrategy(
     {
         jwtFromRequest: ExtractJwt.fromUrlQueryParameter('token'),
-        secretOrKey: secret,
+        secretOrKey: SECRET,
     },
     async (payload, done) => {
         if (payload.type !== 'file') {
@@ -122,8 +122,8 @@ passport.use(jwtFileStrategy);
 
 const githubStrategy = new GitHubStrategy(
     {
-        clientID: process.env.GITHUB_CLIENT_ID,
-        clientSecret: process.env.GITHUB_CLIENT_SECRET,
+        clientID: GITHUB_CLIENT_ID,
+        clientSecret: GITHUB_CLIENT_SECRET,
         callbackURL: 'http://localhost:3000/callback/github',
         failureRedirect: 'http://localhost:3000/login?status=failed',
     },
@@ -157,8 +157,8 @@ passport.use(githubStrategy);
 
 const googleStrategy = new GoogleStrategy(
     {
-        clientID: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        clientID: GOOGLE_CLIENT_ID,
+        clientSecret: GOOGLE_CLIENT_SECRET,
         callbackURL: 'http://localhost:3000/callback/google',
         scope: ['profile'],
         failureRedirect: 'http://localhost:3000/login?status=failed',

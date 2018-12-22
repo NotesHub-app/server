@@ -1,7 +1,7 @@
 import { validationResult } from 'express-validator/check';
 import request from 'superagent';
 import { validationErrorResponse } from '../utils/response';
-import { serverConfiguration } from '../config';
+import { GOOGLE_RECAPTCHA_SECRET_KEY, serverConfiguration } from '../config';
 
 /**
  * Проверка результатов валидации
@@ -36,7 +36,7 @@ export const checkRecaptcha = (tokenField = 'recaptchaToken') => async (req, res
         } = await request
             .post('https://www.google.com/recaptcha/api/siteverify')
             .type('form')
-            .send({ secret: process.env.GOOGLE_RECAPTCHA_SECRET_KEY, response: recaptchaToken })
+            .send({ secret: GOOGLE_RECAPTCHA_SECRET_KEY, response: recaptchaToken })
             .set('accept', 'json');
 
         // Если проверка капчи не удалась или низкий рейтинг

@@ -3,7 +3,7 @@ import uniqueValidator from 'mongoose-unique-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dayjs from 'dayjs';
-import { secret } from '../config';
+import { SECRET } from '../config';
 import { randomString } from '../utils/string';
 
 const mongoSchema = new mongoose.Schema(
@@ -122,7 +122,7 @@ class UserClass {
                 type,
                 ...additionalData,
             },
-            secret,
+            SECRET,
             { expiresIn },
         );
     }

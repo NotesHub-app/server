@@ -1,7 +1,7 @@
 import socketIO from 'socket.io';
 import jwt from 'jsonwebtoken';
 import * as _ from 'lodash';
-import { secret } from './config';
+import { SECRET } from './config';
 
 class WS {
     clients = [];
@@ -15,7 +15,7 @@ class WS {
 
             try {
                 token = token.replace('JWT ', '');
-                socket.payload = jwt.verify(token, secret);
+                socket.payload = jwt.verify(token, SECRET);
 
                 return next();
             } catch (e) {

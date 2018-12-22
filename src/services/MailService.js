@@ -1,14 +1,15 @@
 import mailgun from 'mailgun-js';
+import { MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_FROM } from '../config';
 
 export default class MailService {
     constructor() {
-        this.mg = mailgun({ apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN });
+        this.mg = mailgun({ apiKey: MAILGUN_API_KEY || '?', domain: MAILGUN_DOMAIN || '?' });
     }
 
     async sendMail({ to, subject, text }) {
         try {
             await this.mg.messages().send({
-                from: process.env.MAILGUN_FROM,
+                from: MAILGUN_FROM,
                 to,
                 subject,
                 text,
