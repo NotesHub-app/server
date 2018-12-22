@@ -2,7 +2,6 @@ import express from 'express';
 import mongodb from 'mongodb';
 import mongoose from 'mongoose';
 import { notFoundResponse } from '../../utils/response';
-import mongooseConnectionPromise from '../../db';
 import { fileParamFunction } from './files';
 import File from '../../models/File';
 import { getAttachmentHeaderString } from '../../utils/string';
@@ -25,7 +24,7 @@ router.get('/:fileCode', async (req, res) => {
         return notFoundResponse(res);
     }
 
-    const bucket = new mongodb.GridFSBucket((await mongooseConnectionPromise).connection.db);
+    const bucket = new mongodb.GridFSBucket(mongoose.connection.db);
 
     res.setHeader('Content-type', file.mimeType);
     res.setHeader('Content-Disposition', getAttachmentHeaderString(req, file.fileName));

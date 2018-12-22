@@ -19,6 +19,11 @@ export const checkValidation = () => (req, res, next) => {
 export const checkRecaptcha = (tokenField = 'recaptchaToken') => async (req, res, next) => {
     const recaptchaToken = req.body[tokenField];
 
+    // Во время тестирования не используем проверку
+    if (process.env.NODE_ENV === 'test') {
+        return next();
+    }
+
     if (serverConfiguration.useRecaptcha) {
         // Проверяем результат рекапчи
         const {
