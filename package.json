@@ -70,6 +70,7 @@
         "errorhandler": "^1.5.0",
         "express": "^4.16.4",
         "express-validator": "^5.3.0",
+        "helmet": "^3.15.0",
         "jsonwebtoken": "^8.4.0",
         "lodash": "^4.17.11",
         "mailgun-js": "^0.22.0",

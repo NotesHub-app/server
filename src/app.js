@@ -1,5 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
+import helmet from 'helmet';
 import cors from 'cors';
 import errorHandler from 'errorhandler';
 import morgan from 'morgan';
@@ -19,8 +20,8 @@ const app = express();
 // Добавляем сервисы в locals
 app.locals = { ...app.locals, ...services };
 
-// Отключаем в хедерах сообщение о том что используется Express
-app.disable('x-powered-by');
+// Делаем хедеры секурными
+app.use(helmet());
 
 // Включаем CORS
 app.use(cors());
