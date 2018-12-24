@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import DiffMatchPatch from 'diff-match-patch';
 import * as _ from 'lodash';
 import diff from 'object-diff';
+import dayjs from 'dayjs';
 import ws from '../ws';
 
 /**
@@ -158,6 +159,25 @@ class NoteClass {
      */
     generateHistory(user) {
         const note = this;
+
+        const lastHistoryItem = _.last(note.history);
+
+        // Если от последней правки не прошло более 1 минуты и пользователь совпадает
+        if (
+            lastHistoryItem &&
+            dayjs(lastHistoryItem.dateTime).diff(dayjs()) > -60000 &&
+            lastHistoryItem.author.toString() === user._id.toString()
+        ) {
+            lastHistoryItem.changes.forEach(change => {
+                const dmp = new DiffMatchPatch();
+                const patch = dmp.patch_make(change.diff);
+                note._previous[change.field] = dmp.patch_apply(patch, note._previous[change.field]);
+            });
+
+            note.history = note.history.slice(0, -1);
+        }
+
+        // console.log(note._previous);
 
         const historyItem = { changes: [] };
         let somethingModified = false;

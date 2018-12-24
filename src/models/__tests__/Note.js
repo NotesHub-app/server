@@ -15,7 +15,7 @@ describe('NoteModel', () => {
         const author = await new User({ email: 'user@mail.com' }).save();
 
         // Создаем заметку
-        const note = await new Note({ ...generateNote(), content: 'fooContent', owner: author }).save();
+        let note = await new Note({ ...generateNote(), content: 'fooContent', owner: author }).save();
 
         // Правим заметку
         note.content = 'foo';
@@ -32,6 +32,16 @@ describe('NoteModel', () => {
         expect(note.history[0].changes).toHaveLength(1);
         expect(note.history[0].changes[0].field).toBe('content');
         expect(note.history[0].changes[0].diff).not.toBeUndefined();
+
+        // Делаем повторную правку
+        await note.save();
+        note = await Note.findById(note._id);
+
+        note.content = 'foobar';
+        note.generateHistory(author);
+
+        // В истории должна быть всё еще одна запись
+        expect(note.history).toHaveLength(1);
     });
 
     test('getChildrenIdsOf method', async () => {
