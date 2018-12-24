@@ -126,6 +126,7 @@ router.post(
             newNote.owner = req.user._id;
         }
 
+        newNote.generateHistory(req.user);
         await newNote.save();
 
         await res.status(201).json({ note: newNote.toViewJSON() });
@@ -194,6 +195,7 @@ router.patch(
             ['content'],
         );
 
+        note.generateHistory(req.user);
         await note.save();
 
         await res.json({ success: true });

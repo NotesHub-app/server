@@ -1,3 +1,5 @@
+import timekeeper from 'timekeeper';
+import dayjs from 'dayjs';
 import { resetDB } from '../../test/helpers';
 import Note from '../Note';
 import User from '../User';
@@ -8,6 +10,7 @@ import File from '../File';
 describe('NoteModel', () => {
     afterEach(async () => {
         await resetDB();
+        timekeeper.reset();
     });
 
     test('generateHistory method', async () => {
@@ -29,9 +32,8 @@ describe('NoteModel', () => {
         expect(note.history[0].dateTime).not.toBeUndefined();
 
         // Должно быть зафиксировано только одно изменение
-        expect(note.history[0].changes).toHaveLength(1);
-        expect(note.history[0].changes[0].field).toBe('content');
-        expect(note.history[0].changes[0].diff).not.toBeUndefined();
+        expect(note.history[0].changes).toEqual({ content: 'foo' });
+        const prevDateTime = note.history[0].dateTime;
 
         // Делаем повторную правку
         await note.save();
@@ -42,6 +44,23 @@ describe('NoteModel', () => {
 
         // В истории должна быть всё еще одна запись
         expect(note.history).toHaveLength(1);
+        expect(note.history[0].changes).toEqual({ content: 'foobar' });
+        expect(note.history[0].dateTime).not.toBe(prevDateTime);
+
+        // Двигаем время на 10 минут вперед
+        timekeeper.travel(new Date(dayjs().add(10, 'minutes')));
+
+        // Делаем повторную правку
+        await note.save();
+        note = await Note.findById(note._id);
+
+        note.content = 'bazz';
+        note.generateHistory(author);
+
+        // В истории должна повяиться новая запись
+        expect(note.history).toHaveLength(2);
+        expect(note.history[0].changes).toEqual({ content: 'foobar' });
+        expect(note.history[1].changes).toEqual({ content: 'bazz' });
     });
 
     test('getChildrenIdsOf method', async () => {

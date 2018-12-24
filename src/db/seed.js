@@ -18,12 +18,21 @@ async function makeNotes({ parent, group, owner, deepness = 0 }) {
     if (deepness < 3) {
         // eslint-disable-next-line no-unused-vars
         for (const idx of _.range(1, 5)) {
-            const note = await new Note({
+            const note = new Note({
                 ...generateNote(getNonce()),
                 owner,
                 group,
                 parent,
-            }).save();
+            });
+
+            if (owner) {
+                note.generateHistory(owner);
+            } else {
+                // В системе всё равно пока только один пользователь - его и выставляем
+                note.generateHistory(await User.findOne());
+            }
+
+            await note.save();
             await makeNotes({ parent: note, owner, group, deepness: deepness + 1 });
         }
     }

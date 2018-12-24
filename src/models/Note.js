@@ -55,13 +55,8 @@ const mongoSchema = new mongoose.Schema(
         // История правок
         history: [
             {
-                // Массив изменений
-                changes: [
-                    {
-                        field: String,
-                        diff: Object,
-                    },
-                ],
+                // Объект с изменениями
+                changes: Object,
 
                 // Автор правок
                 author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -162,25 +157,20 @@ class NoteClass {
 
         const lastHistoryItem = _.last(note.history);
 
+        let historyItem = { changes: {} };
+        let somethingModified = false;
+
         // Если от последней правки не прошло более 1 минуты и пользователь совпадает
         if (
             lastHistoryItem &&
             dayjs(lastHistoryItem.dateTime).diff(dayjs()) > -60000 &&
             lastHistoryItem.author.toString() === user._id.toString()
         ) {
-            lastHistoryItem.changes.forEach(change => {
-                const dmp = new DiffMatchPatch();
-                const patch = dmp.patch_make(change.diff);
-                note._previous[change.field] = dmp.patch_apply(patch, note._previous[change.field]);
-            });
-
             note.history = note.history.slice(0, -1);
+            historyItem = lastHistoryItem;
+            somethingModified = true;
         }
 
-        // console.log(note._previous);
-
-        const historyItem = { changes: [] };
-        let somethingModified = false;
         _.each(mongoSchema.obj, (options, field) => {
             // Для полей которых keepHistory
             if (options.keepHistory) {
@@ -188,12 +178,7 @@ class NoteClass {
                 if (note.isModified(field)) {
                     somethingModified = true;
 
-                    // Сохраняем в базе diff объект разницы
-                    const dmp = new DiffMatchPatch();
-                    historyItem.changes.push({
-                        field,
-                        diff: dmp.diff_main(note[field], note._previous[field]),
-                    });
+                    historyItem.changes[field] = note[field];
                 }
             }
         });
