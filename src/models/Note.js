@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import DiffMatchPatch from 'diff-match-patch';
 import * as _ from 'lodash';
+import diff from 'object-diff';
 import ws from '../ws';
 
 /**
@@ -269,6 +270,17 @@ class NoteClass {
             content: this.content,
             files: this.files.map(file => file.toIndexJSON()),
         };
+    }
+
+    toPatchJSON() {
+        const note = this;
+        const result = {};
+        for (const field of Object.keys(diff(this, note._previous))) {
+            const dmp = new DiffMatchPatch();
+            result[field] = dmp.patch_make(note._previous[field], note[field]);
+        }
+
+        return result;
     }
 }
 

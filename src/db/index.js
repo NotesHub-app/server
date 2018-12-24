@@ -48,7 +48,7 @@ const connectionPromise = mongoose.connect(
 
 // Показываем дебуггерскую инфу в консоль
 if (process.env.NODE_ENV === 'development') {
-    mongoose.set('debug', true);
+    // mongoose.set('debug', true);
 }
 
 export default connectionPromise;

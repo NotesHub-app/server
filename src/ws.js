@@ -26,20 +26,26 @@ class WS {
         this.io.on('connection', socket => {
             const { clientId } = socket.handshake.query;
 
-            // Кладем инфу по клиенту в общий массив клиентов
-            this.clients.push({
+            const clientObj = {
                 id: clientId,
                 socket,
                 userId: socket.payload.id,
-            });
-        });
+                subscribedNoteId: null,
+            };
 
-        this.io.on('disconnect', socket => {
-            // Убираем клиента из общего массива клиентов
-            const i = this.clients.findIndex(client => client.socket === socket);
-            if (i > -1) {
-                this.clients.splice(i, 1);
-            }
+            // Кладем инфу по клиенту в общий массив клиентов
+            this.clients.push(clientObj);
+
+            // При подписки на получение детальных данных по заметке
+            socket.on('note:subscribe', ({ noteId }) => {
+                clientObj.subscribedNoteId = noteId;
+            });
+
+            // При дисконекте
+            socket.on('disconnect', () => {
+                // Удаляем из массива клиентов
+                this.clients = this.clients.filter(i => i !== clientObj);
+            });
         });
     }
 
@@ -84,7 +90,12 @@ class WS {
     notifyNoteUpdate(note, userIds, skipClientId) {
         this.send({
             command: 'note:updated',
-            data: { note: note.toIndexJSON() },
+            data: ({ client }) => {
+                if (client.subscribedNoteId === note._id.toString()) {
+                    return { noteId: note._id, notePatch: note.toPatchJSON(), isPatch: true };
+                }
+                return { note: note.toIndexJSON() };
+            },
             userIds,
             skipClientId,
         });
