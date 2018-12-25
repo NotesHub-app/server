@@ -77,6 +77,35 @@ describe('notes', () => {
         });
     });
 
+    describe('[GET /api/notes/:note/history + /:idx]', async () => {
+        test('получение истории', async () => {
+            const note = new Note({ ...generateNote(), owner: author.id });
+            note.generateHistory(author);
+            await note.save();
+
+            let response = await request(app)
+                .get(`/api/notes/${note._id}/history`)
+                .set('Authorization', `JWT ${author.generateJWT()}`);
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body.history).toHaveLength(1);
+            expect(response.body.history[0].author.email).toBe(author.email);
+            expect(typeof response.body.history[0].dateTime).toBe('number');
+
+            // Получение деталий истории
+
+            response = await request(app)
+                .get(`/api/notes/${note._id}/history/0`)
+                .set('Authorization', `JWT ${author.generateJWT()}`);
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body.before).not.toBeUndefined();
+            expect(response.body.after).not.toBeUndefined();
+        });
+    });
+
     describe('[POST /api/notes]', () => {
         test('создание заметки с невалидными параметрами', async () => {
             const response = await request(app)

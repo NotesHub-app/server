@@ -177,9 +177,11 @@ class NoteClass {
                 // Если была модификация содержимого
                 if (note.isModified(field)) {
                     somethingModified = true;
-
-                    historyItem.changes[field] = note[field];
                 }
+
+                // Сохраняем в любом случае все поля чтоб в последующем можно
+                // было сравнивать разные экземпляры истории
+                historyItem.changes[field] = note[field];
             }
         });
 
@@ -277,6 +279,7 @@ class NoteClass {
         };
     }
 
+    /** Формирование объекта с изменениями в виде patch-ей */
     toPatchJSON() {
         const note = this;
         const result = {};

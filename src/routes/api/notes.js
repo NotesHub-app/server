@@ -59,6 +59,51 @@ router.get('/:note', async (req, res) => {
     return res.status(200).json({ note: note.toViewJSON() });
 });
 
+// получение истории изменения заметки
+router.get('/:note/history', async (req, res) => {
+    const { note } = req.params;
+
+    // Нам нужна инфа по авторам правок
+    await note.populate('history.author').execPopulate();
+
+    const historyItems = note.history.map(historyItem => ({
+        author: historyItem.author.toIndexJSON(),
+        dateTime: historyItem.dateTime.getTime(),
+    }));
+
+    return res.status(200).json({ history: historyItems });
+});
+
+// получение экземпляра истории изменений
+router.get('/:note/history/:idx', async (req, res) => {
+    const { note } = req.params;
+    const idx = Number(req.params.idx);
+
+    // Нам нужна инфа по авторам правок
+    await note.populate('history.author').execPopulate();
+
+    const historyItem = note.history[idx];
+    if (!historyItem) {
+        return notFoundResponse(res);
+    }
+    const previousHistoryItem = note.history[idx - 1] || { changes: {} };
+
+    for (const field of Object.keys(historyItem.changes)) {
+        if (previousHistoryItem.changes[field] === undefined) {
+            previousHistoryItem.changes[field] = '';
+        }
+    }
+
+    const historyDetails = {
+        author: historyItem.author.toIndexJSON(),
+        dateTime: historyItem.dateTime.getTime(),
+        before: previousHistoryItem.changes,
+        after: historyItem.changes,
+    };
+
+    return res.status(200).json(historyDetails);
+});
+
 // Создание заметки
 router.post(
     '/',

@@ -118,30 +118,18 @@ class GroupClass {
 
     /**
      * Вывод для отображения в настройках группы
-     * @param user
      * @returns {{myRole, id, title, users: Array}}
      */
     async toViewJSON(user) {
-        const users = await this.getUsers();
+        const groupUsers = await this.getUsers();
 
         const resultUsers = [];
-        users.forEach(({ groups, _id, email, userName, githubId, githubInfo, googleId, googleInfo }) => {
-            const { role } = groups.find(i => i.group.toString() === this._id.toString());
+        groupUsers.forEach(groupUser => {
+            const { role } = groupUser.groups.find(i => i.group.toString() === this._id.toString());
             const resultUser = {
-                id: _id,
-                userName,
+                ...groupUser.toIndexJSON(),
                 role,
             };
-            if (email) {
-                resultUser.email = email;
-            }
-            if (githubId) {
-                resultUser.githubUrl = githubInfo.url;
-            }
-            if (googleId) {
-                resultUser.googleUrl = googleInfo.url;
-            }
-
             resultUsers.push(resultUser);
         });
 

@@ -180,6 +180,25 @@ class UserClass {
             uiSettings: this.uiSettings || {},
         };
     }
+
+    /** Форма пользователя для отображения в списках */
+    toIndexJSON() {
+        const resultUser = {
+            id: this._id,
+            userName: this.userName,
+        };
+        if (this.email) {
+            resultUser.email = this.email;
+        }
+        if (this.githubId) {
+            resultUser.githubUrl = this.githubInfo.url;
+        }
+        if (this.googleId) {
+            resultUser.googleUrl = this.googleInfo.url;
+        }
+
+        return resultUser;
+    }
 }
 
 mongoSchema.loadClass(UserClass);
