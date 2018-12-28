@@ -4,7 +4,14 @@ import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '../models/User';
-import { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SECRET } from './index';
+import {
+    GITHUB_CLIENT_ID,
+    GITHUB_CLIENT_SECRET,
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    SECRET,
+    serverConfiguration,
+} from './index';
 
 // Настройка проверки аутентификации по паролю
 passport.use(
@@ -124,8 +131,8 @@ const githubStrategy = new GitHubStrategy(
     {
         clientID: GITHUB_CLIENT_ID,
         clientSecret: GITHUB_CLIENT_SECRET,
-        callbackURL: 'http://localhost:3000/callback/github',
-        failureRedirect: 'http://localhost:3000/login?status=failed',
+        callbackURL: `${serverConfiguration.siteUrl}/callback/github`,
+        failureRedirect: `${serverConfiguration.siteUrl}/login?status=failed`,
     },
     async (accessToken, refreshToken, profile, done) => {
         try {
@@ -159,9 +166,9 @@ const googleStrategy = new GoogleStrategy(
     {
         clientID: GOOGLE_CLIENT_ID,
         clientSecret: GOOGLE_CLIENT_SECRET,
-        callbackURL: 'http://localhost:3000/callback/google',
+        callbackURL: `${serverConfiguration.siteUrl}/callback/google`,
         scope: ['profile'],
-        failureRedirect: 'http://localhost:3000/login?status=failed',
+        failureRedirect: `${serverConfiguration.siteUrl}/login?status=failed`,
     },
     async (accessToken, refreshToken, profile, done) => {
         try {
