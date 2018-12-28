@@ -13,9 +13,10 @@ export const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN || '?';
 export const MAILGUN_FROM = process.env.MAILGUN_FROM || '?';
 
 export const serverConfiguration = {
-    googleAuth: JSON.stringify(process.env.GOOGLE_AUTH || false),
-    githubAuth: JSON.stringify(process.env.GITHUB_AUTH || false),
-    emailRegistrationConfirmation: JSON.stringify(process.env.EMAIL_REGISTRATION_CONFIRMATION || false),
-    useRecaptcha: JSON.stringify(process.env.USE_RECAPTCHA || false),
+    googleAuth: JSON.parse(process.env.GOOGLE_AUTH || false),
+    githubAuth: JSON.parse(process.env.GITHUB_AUTH || false),
+    emailRegistrationConfirmation: JSON.parse(process.env.EMAIL_REGISTRATION_CONFIRMATION || false),
+    useRecaptcha: JSON.parse(process.env.USE_RECAPTCHA || false),
     recaptchaClientKey: process.env.GOOGLE_RECAPTCHA_SITE_KEY,
+    siteUrl: process.env.SITE_URL || `http://localhost:3000`,
 };
