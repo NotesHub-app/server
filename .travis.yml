@@ -1,15 +1,12 @@
 language: node_js
 node_js:
   - node
-before_script:
-  - yarn
-script:
-  - yarn test
-
-dist: xenial
 
 jobs:
   include:
+    - stage: test
+      before_script: yarn
+      script: yarn test
     - stage: build docker image
       script:
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin

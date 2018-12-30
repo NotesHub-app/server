@@ -30,7 +30,8 @@
         "test": {
             "command": "jest --runInBand --verbose false --config ./src/test/jest.config.js",
             "env": {
-                "NODE_ENV": "test"
+                "NODE_ENV": "test",
+                "EMAIL_REGISTRATION_CONFIRMATION": "true"
             }
         }
     },
