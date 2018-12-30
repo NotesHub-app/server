@@ -160,16 +160,16 @@ class UserClass {
             id: this._id,
             email: this.email,
             userName: this.userName,
-            token: `JWT ${this.generateJWT()}`,
+            accessToken: this.generateJWT(),
             fileToken: this.generateJWT({
                 type: 'file',
                 expiresIn: 86400 * 7, // 7 дней
             }),
-            refreshToken: `JWT ${this.generateJWT({
+            refreshToken: this.generateJWT({
                 type: 'refresh',
                 expiresIn: 86400 * 90, // 3 месяца
                 additionalData: { code: this.refreshTokenCode },
-            })}`,
+            }),
         };
     }
 

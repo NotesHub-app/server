@@ -32,7 +32,7 @@ describe('NoteModel', () => {
         expect(note.history[0].dateTime).not.toBeUndefined();
 
         // Должно быть зафиксировано только одно изменение
-        expect(note.history[0].changes).toEqual({ content: 'foo' });
+        expect(note.history[0].changes.content).toEqual('foo');
         const prevDateTime = note.history[0].dateTime;
 
         // Делаем повторную правку
@@ -44,7 +44,7 @@ describe('NoteModel', () => {
 
         // В истории должна быть всё еще одна запись
         expect(note.history).toHaveLength(1);
-        expect(note.history[0].changes).toEqual({ content: 'foobar' });
+        expect(note.history[0].changes.content).toEqual('foobar');
         expect(note.history[0].dateTime).not.toBe(prevDateTime);
 
         // Двигаем время на 10 минут вперед
@@ -59,8 +59,8 @@ describe('NoteModel', () => {
 
         // В истории должна повяиться новая запись
         expect(note.history).toHaveLength(2);
-        expect(note.history[0].changes).toEqual({ content: 'foobar' });
-        expect(note.history[1].changes).toEqual({ content: 'bazz' });
+        expect(note.history[0].changes.content).toEqual('foobar');
+        expect(note.history[1].changes.content).toEqual('bazz');
     });
 
     test('getChildrenIdsOf method', async () => {

@@ -18,7 +18,7 @@ const validUser = {
     },
 };
 
-let token = '';
+let accessToken = '';
 let refreshToken = '';
 let newRefreshToken = '';
 
@@ -55,9 +55,9 @@ describe('auth', () => {
             expect(response.statusCode).toBe(200);
             expect(response.body.email).toBe(validUser.email);
             expect(response.body.userName).toBe(validUser.userName);
-            expect(response.body.token.length).toBeGreaterThan(20);
+            expect(response.body.accessToken.length).toBeGreaterThan(20);
 
-            token = response.body.token;
+            accessToken = response.body.accessToken;
             refreshToken = response.body.refreshToken;
         });
     });
@@ -66,7 +66,7 @@ describe('auth', () => {
         test('попытка обновления токена с auth-токеном', async () => {
             const response = await request(app)
                 .post('/api/auth/refresh-token')
-                .set('Authorization', token)
+                .set('Authorization', `JWT ${accessToken}`)
                 .send({});
 
             expect(response.statusCode).toBe(401);
@@ -75,7 +75,7 @@ describe('auth', () => {
         test('успешное обновление токена с refresh-токеном', async () => {
             const response = await request(app)
                 .post('/api/auth/refresh-token')
-                .set('Authorization', refreshToken)
+                .set('Authorization', `JWT ${refreshToken}`)
                 .send({});
 
             expect(response.statusCode).toBe(200);
@@ -86,7 +86,7 @@ describe('auth', () => {
         test('повторное использование refresh-токена даст ошибку', async () => {
             const response = await request(app)
                 .post('/api/auth/refresh-token')
-                .set('Authorization', refreshToken)
+                .set('Authorization', `JWT ${refreshToken}`)
                 .send({});
 
             expect(response.statusCode).toBe(401);
@@ -95,7 +95,7 @@ describe('auth', () => {
         test('попытка заслать неверный токен', async () => {
             const response = await request(app)
                 .post('/api/auth/refresh-token')
-                .set('Authorization', 'WRONG_TOKEN!')
+                .set('Authorization', 'JWT WRONG_TOKEN!')
                 .send({});
 
             expect(response.statusCode).toBe(401);
@@ -106,7 +106,7 @@ describe('auth', () => {
 
             const response = await request(app)
                 .post('/api/auth/refresh-token')
-                .set('Authorization', newRefreshToken)
+                .set('Authorization', `JWT ${newRefreshToken}`)
                 .send({});
 
             expect(response.statusCode).toBe(401);
@@ -117,7 +117,7 @@ describe('auth', () => {
 
             const response = await request(app)
                 .get('/api/notes')
-                .set('Authorization', token)
+                .set('Authorization', `JWT ${accessToken}`)
                 .send({});
 
             expect(response.statusCode).toBe(401);
