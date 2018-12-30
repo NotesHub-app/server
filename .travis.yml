@@ -5,3 +5,15 @@ before_script:
   - yarn
 script:
   - yarn test
+
+dist: xenial
+
+jobs:
+  include:
+    - stage: build docker image
+      script:
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        - docker build -f ./docker/Dockerfile . -t noteshub-server
+        - docker images
+        - docker tag noteshub-server $DOCKER_USERNAME/noteshub-server
+        - docker push $DOCKER_USERNAME/noteshub-server
